@@ -1,0 +1,14 @@
+{
+  "name": "HomeSeer Bridge",
+  "render_readme": true,
+  "domains": [
+    "switch",
+    "light",
+    "sensor",
+    "binary_sensor",
+    "lock",
+    "cover",
+    "fan"
+  ],
+  "homeassistant": "2026.7.0"
+}

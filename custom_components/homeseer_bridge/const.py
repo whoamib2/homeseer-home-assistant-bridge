@@ -1,0 +1,13 @@
+DOMAIN = "homeseer_bridge"
+
+CONF_HS_URL = "homeseer_url"
+CONF_MQTT_PREFIX = "mqtt_prefix"
+CONF_EXCLUDED_TERMS = "excluded_terms"
+
+DEFAULT_HS_URL = "http://192.168.0.193"
+DEFAULT_MQTT_PREFIX = "Homeseer/Chip23/mcsMQTT"
+DEFAULT_EXCLUDED_TERMS = "august,yolink,shelly"
+
+PLATFORMS = ["switch", "light", "sensor", "binary_sensor", "lock", "cover", "fan"]
+
+SIGNAL_STATE_UPDATED = "homeseer_bridge_state_updated"
