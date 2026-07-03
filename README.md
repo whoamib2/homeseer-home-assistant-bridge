@@ -1,5 +1,15 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.3.0
+
+- Adds Home Assistant services:
+  - `homeseer_bridge.refresh_all`
+  - `homeseer_bridge.control_device`
+  - `homeseer_bridge.reload_devices`
+- Adds manual refresh/control/reload counters to diagnostics.
+- Manual control immediately updates the local state cache while MQTT confirmation follows.
+
+
 ## v1.2.0
 
 - Adds incremental API refresh to keep HomeSeer and Home Assistant synchronized.

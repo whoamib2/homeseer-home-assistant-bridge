@@ -1,0 +1,29 @@
+refresh_all:
+  name: Refresh all HomeSeer devices
+  description: Fetch all device states from HomeSeer and update Home Assistant.
+  fields: {}
+
+control_device:
+  name: Control HomeSeer device
+  description: Send a raw control value to a HomeSeer device reference.
+  fields:
+    ref:
+      name: HomeSeer Ref
+      description: HomeSeer device reference ID.
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    value:
+      name: Value
+      description: Value to send to HomeSeer, such as 0, 1, 100, or 255.
+      required: true
+      selector:
+        number:
+          mode: box
+
+reload_devices:
+  name: Reload HomeSeer device cache
+  description: Re-fetch devices from HomeSeer, rebuild MQTT topic lookup, and update entities where possible.
+  fields: {}
