@@ -30,7 +30,9 @@ class HomeSeerEntityBase:
         signal = f"{SIGNAL_STATE_UPDATED}_{self.entry.entry_id}_{self.ref}"
 
         def _handle_update():
-            self.async_write_ha_state()
+            # MQTT/dispatcher callbacks may be invoked outside the event loop.
+            # Home Assistant requires async_write_ha_state to run on the loop.
+            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, _handle_update))
 

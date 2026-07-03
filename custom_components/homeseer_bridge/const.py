@@ -11,3 +11,6 @@ DEFAULT_EXCLUDED_TERMS = "august,yolink,shelly"
 PLATFORMS = ["switch", "light", "sensor", "binary_sensor", "lock", "cover", "fan"]
 
 SIGNAL_STATE_UPDATED = "homeseer_bridge_state_updated"
+
+CONF_ENABLE_DEBUG_LOGGING = "enable_debug_logging"
+DEFAULT_ENABLE_DEBUG_LOGGING = False

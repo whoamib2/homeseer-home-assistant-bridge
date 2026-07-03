@@ -99,7 +99,7 @@ def device_info(device: dict) -> dict:
         "identifiers": {(DOMAIN, str(device["ref"]))},
         "name": full_name(device),
         "manufacturer": "HomeSeer",
-        "model": device.get("device_type") or "HS4 Device",
+        "model": f"{device.get('device_type') or 'HS4 Device'}{' via ' + device.get('interface') if device.get('interface') else ''}",
     }
 
 def text_blob(device: dict) -> str:

@@ -12,6 +12,8 @@ from .const import (
     DEFAULT_HS_URL,
     DEFAULT_MQTT_PREFIX,
     DEFAULT_EXCLUDED_TERMS,
+    CONF_ENABLE_DEBUG_LOGGING,
+    DEFAULT_ENABLE_DEBUG_LOGGING,
 )
 
 class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -31,6 +33,7 @@ class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_HS_URL, default=DEFAULT_HS_URL): str,
             vol.Required(CONF_MQTT_PREFIX, default=DEFAULT_MQTT_PREFIX): str,
             vol.Optional(CONF_EXCLUDED_TERMS, default=DEFAULT_EXCLUDED_TERMS): str,
+            vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=DEFAULT_ENABLE_DEBUG_LOGGING): bool,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors={})
 
@@ -54,5 +57,9 @@ class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
                 CONF_EXCLUDED_TERMS,
                 default=options.get(CONF_EXCLUDED_TERMS, data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS)),
             ): str,
+            vol.Optional(
+                CONF_ENABLE_DEBUG_LOGGING,
+                default=options.get(CONF_ENABLE_DEBUG_LOGGING, data.get(CONF_ENABLE_DEBUG_LOGGING, DEFAULT_ENABLE_DEBUG_LOGGING)),
+            ): bool,
         })
         return self.async_show_form(step_id="init", data_schema=schema, errors={})

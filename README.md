@@ -1,5 +1,22 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.1.0
+
+- Includes v1.0.2 thread-safety fix for MQTT-driven updates.
+- Adds Home Assistant diagnostics support.
+- Tracks recent unmatched MQTT topics for troubleshooting.
+- Adds optional debug logging in the integration options.
+- Updates repository links to `whoamib2/homeseer-home-assistant-bridge`.
+- Shows HomeSeer interface/plugin info in the HA device model where available.
+
+
+## v1.0.2
+
+- Fixes thread-safety error from MQTT updates.
+- Ensures entity state writes run on the Home Assistant event loop.
+- Should make MQTT-driven updates apply immediately instead of being delayed or rejected.
+
+
 ## v1.0.1
 
 - Fixes entity setup crash: `NoneType object has no attribute data`.
