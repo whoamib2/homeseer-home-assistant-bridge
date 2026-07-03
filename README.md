@@ -1,5 +1,11 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.0.1
+
+- Fixes entity setup crash: `NoneType object has no attribute data`.
+- Entities no longer access `self.hass` during initialization.
+
+
 Custom Home Assistant integration for bridging HomeSeer HS4 devices into Home Assistant.
 
 ## What it does
