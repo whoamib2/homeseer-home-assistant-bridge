@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.4.0
+
+- Updates `manifest.json` for stricter Home Assistant/HACS validation.
+- Simplifies `hacs.json` to the current HACS-compatible minimum.
+- Adds local brand assets at `custom_components/homeseer_bridge/brand/icon.png` and `logo.png`.
+- Sets code owner and integration type metadata.
+- Keeps the v1.3.1 diagnostics fix and v1.3.0 services.
+
+
 ## v1.3.1
 
 - Fixes diagnostics import/setup error.
