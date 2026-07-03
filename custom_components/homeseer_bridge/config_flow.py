@@ -12,12 +12,14 @@ from .const import (
     CONF_ENABLE_DEBUG_LOGGING,
     CONF_REFRESH_INTERVAL_SECONDS,
     CONF_RECONNECT_INTERVAL_SECONDS,
+    CONF_VIRTUAL_POLL_INTERVAL_SECONDS,
     DEFAULT_HS_URL,
     DEFAULT_MQTT_PREFIX,
     DEFAULT_EXCLUDED_TERMS,
     DEFAULT_ENABLE_DEBUG_LOGGING,
     DEFAULT_REFRESH_INTERVAL_SECONDS,
     DEFAULT_RECONNECT_INTERVAL_SECONDS,
+    DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
 
 
@@ -41,6 +43,7 @@ class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=DEFAULT_ENABLE_DEBUG_LOGGING): bool,
             vol.Optional(CONF_REFRESH_INTERVAL_SECONDS, default=DEFAULT_REFRESH_INTERVAL_SECONDS): int,
             vol.Optional(CONF_RECONNECT_INTERVAL_SECONDS, default=DEFAULT_RECONNECT_INTERVAL_SECONDS): int,
+            vol.Optional(CONF_VIRTUAL_POLL_INTERVAL_SECONDS, default=DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS): int,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors={})
 
@@ -57,10 +60,29 @@ class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
         options = dict(self._config_entry.options)
 
         schema = vol.Schema({
-            vol.Optional(CONF_MQTT_PREFIX, default=options.get(CONF_MQTT_PREFIX, data.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX))): str,
-            vol.Optional(CONF_EXCLUDED_TERMS, default=options.get(CONF_EXCLUDED_TERMS, data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS))): str,
-            vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=options.get(CONF_ENABLE_DEBUG_LOGGING, data.get(CONF_ENABLE_DEBUG_LOGGING, DEFAULT_ENABLE_DEBUG_LOGGING))): bool,
-            vol.Optional(CONF_REFRESH_INTERVAL_SECONDS, default=options.get(CONF_REFRESH_INTERVAL_SECONDS, data.get(CONF_REFRESH_INTERVAL_SECONDS, DEFAULT_REFRESH_INTERVAL_SECONDS))): int,
-            vol.Optional(CONF_RECONNECT_INTERVAL_SECONDS, default=options.get(CONF_RECONNECT_INTERVAL_SECONDS, data.get(CONF_RECONNECT_INTERVAL_SECONDS, DEFAULT_RECONNECT_INTERVAL_SECONDS))): int,
+            vol.Optional(
+                CONF_MQTT_PREFIX,
+                default=options.get(CONF_MQTT_PREFIX, data.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX)),
+            ): str,
+            vol.Optional(
+                CONF_EXCLUDED_TERMS,
+                default=options.get(CONF_EXCLUDED_TERMS, data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS)),
+            ): str,
+            vol.Optional(
+                CONF_ENABLE_DEBUG_LOGGING,
+                default=options.get(CONF_ENABLE_DEBUG_LOGGING, data.get(CONF_ENABLE_DEBUG_LOGGING, DEFAULT_ENABLE_DEBUG_LOGGING)),
+            ): bool,
+            vol.Optional(
+                CONF_REFRESH_INTERVAL_SECONDS,
+                default=options.get(CONF_REFRESH_INTERVAL_SECONDS, data.get(CONF_REFRESH_INTERVAL_SECONDS, DEFAULT_REFRESH_INTERVAL_SECONDS)),
+            ): int,
+            vol.Optional(
+                CONF_RECONNECT_INTERVAL_SECONDS,
+                default=options.get(CONF_RECONNECT_INTERVAL_SECONDS, data.get(CONF_RECONNECT_INTERVAL_SECONDS, DEFAULT_RECONNECT_INTERVAL_SECONDS)),
+            ): int,
+            vol.Optional(
+                CONF_VIRTUAL_POLL_INTERVAL_SECONDS,
+                default=options.get(CONF_VIRTUAL_POLL_INTERVAL_SECONDS, data.get(CONF_VIRTUAL_POLL_INTERVAL_SECONDS, DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS)),
+            ): int,
         })
         return self.async_show_form(step_id="init", data_schema=schema, errors={})

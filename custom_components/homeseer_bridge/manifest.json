@@ -1,7 +1,7 @@
 {
   "domain": "homeseer_bridge",
   "name": "HomeSeer Bridge",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "documentation": "https://github.com/whoamib2/homeseer-home-assistant-bridge",
   "requirements": [],
   "codeowners": [

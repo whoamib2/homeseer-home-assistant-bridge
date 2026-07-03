@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.5.2
+
+- Adds hybrid sync for HomeSeer virtual devices that do not publish MQTT.
+- Automatically detects likely virtual devices and polls only those devices every 5 seconds by default.
+- Adds `virtual_poll_interval_seconds` option; set it to `0` to disable virtual polling.
+- Keeps MQTT as the instant update path for physical devices.
+- Preserves the v1.5.1 migration fix by keeping config flow version at `1`.
+
+
 ## v1.5.0
 
 - Adds automatic reconnect/backoff checks after HomeSeer API failures.

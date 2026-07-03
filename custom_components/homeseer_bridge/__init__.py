@@ -24,6 +24,8 @@ from .const import (
     DEFAULT_REFRESH_INTERVAL_SECONDS,
     CONF_RECONNECT_INTERVAL_SECONDS,
     DEFAULT_RECONNECT_INTERVAL_SECONDS,
+    CONF_VIRTUAL_POLL_INTERVAL_SECONDS,
+    DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
 
@@ -49,6 +51,30 @@ def _device_changed(old: dict | None, new: dict) -> bool:
     )
 
 
+def _is_virtual_device(device: dict) -> bool:
+    text = " ".join(
+        str(device.get(key) or "")
+        for key in (
+            "interface",
+            "interface_name",
+            "device_type",
+            "device_type_string",
+            "Device_Type_Description",
+            "device_type_description",
+            "name",
+            "location",
+            "location2",
+        )
+    ).lower()
+
+    return (
+        "virtual" in text
+        or "home virtual" in text
+        or str(device.get("interface") or "").lower() in {"virtual", "homeseer"}
+        or str(device.get("interface_name") or "").lower() in {"virtual", "homeseer"}
+    )
+
+
 async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: HomeSeerApi, debug_logging: bool) -> int:
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not data:
@@ -65,17 +91,51 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
             changed_refs.append(ref)
 
     data["topic_lookup"] = build_topic_lookup(current_state, entry)
+    data["virtual_refs"] = {ref for ref, device in current_state.items() if _is_virtual_device(device)}
     data["stats"]["api_refreshes"] += 1
     data["stats"]["last_refresh_changed"] = len(changed_refs)
     data["stats"]["last_refresh_devices"] = len(fresh_state)
     data["stats"]["last_api_ok"] = True
     data["stats"]["consecutive_api_failures"] = 0
+    data["stats"]["virtual_devices"] = len(data["virtual_refs"])
 
-    if debug_logging:
-        _LOGGER.debug(
-            "HomeSeer API refresh completed: fresh=%s changed=%s total_cached=%s",
-            len(fresh_state), len(changed_refs), len(current_state)
+    for ref in changed_refs:
+        hass.loop.call_soon_threadsafe(
+            async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
         )
+
+    return len(changed_refs)
+
+
+async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: HomeSeerApi, debug_logging: bool) -> int:
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not data:
+        return 0
+
+    virtual_refs = data.get("virtual_refs") or set()
+    if not virtual_refs:
+        return 0
+
+    fresh_state = await api.async_get_status()
+    current_state = data["state"]
+    changed_refs: list[int] = []
+
+    for ref in virtual_refs:
+        new_device = fresh_state.get(ref)
+        if new_device is None:
+            continue
+        old_device = current_state.get(ref)
+        if _device_changed(old_device, new_device):
+            current_state[ref] = new_device
+            changed_refs.append(ref)
+
+    data["stats"]["virtual_polls"] += 1
+    data["stats"]["last_virtual_poll_changed"] = len(changed_refs)
+    data["stats"]["last_api_ok"] = True
+    data["stats"]["consecutive_api_failures"] = 0
+
+    if debug_logging and changed_refs:
+        _LOGGER.debug("HomeSeer virtual poll changed refs=%s", changed_refs)
 
     for ref in changed_refs:
         hass.loop.call_soon_threadsafe(
@@ -91,15 +151,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     state = await api.async_get_status()
     topic_lookup = build_topic_lookup(state, entry)
+    virtual_refs = {ref for ref, device in state.items() if _is_virtual_device(device)}
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "state": state,
         "topic_lookup": topic_lookup,
+        "virtual_refs": virtual_refs,
         "unsub": None,
         "unsub_refresh": None,
         "unsub_reconnect_watch": None,
+        "unsub_virtual_poll": None,
         "unmatched_topics": {},
         "stats": {
             "mqtt_updates": 0,
@@ -113,6 +176,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "consecutive_api_failures": 0,
             "reconnect_attempts": 0,
             "reconnect_successes": 0,
+            "virtual_devices": len(virtual_refs),
+            "virtual_polls": 0,
+            "last_virtual_poll_changed": 0,
         },
     }
 
@@ -177,6 +243,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, refresh_from_homeseer, timedelta(seconds=refresh_interval)
         )
 
+    virtual_poll_interval = int(entry.options.get(
+        CONF_VIRTUAL_POLL_INTERVAL_SECONDS,
+        entry.data.get(CONF_VIRTUAL_POLL_INTERVAL_SECONDS, DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS),
+    ))
+
+    async def virtual_poll(now=None):
+        data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+        if not data:
+            return
+        try:
+            await _poll_virtual_devices(hass, entry, api, debug_logging)
+        except Exception:
+            data["stats"]["last_api_ok"] = False
+            data["stats"]["consecutive_api_failures"] += 1
+            _LOGGER.debug("HomeSeer virtual device poll failed", exc_info=True)
+
+    if virtual_poll_interval > 0 and virtual_refs:
+        hass.data[DOMAIN][entry.entry_id]["unsub_virtual_poll"] = async_track_time_interval(
+            hass, virtual_poll, timedelta(seconds=virtual_poll_interval)
+        )
+
     reconnect_interval = int(entry.options.get(
         CONF_RECONNECT_INTERVAL_SECONDS,
         entry.data.get(CONF_RECONNECT_INTERVAL_SECONDS, DEFAULT_RECONNECT_INTERVAL_SECONDS),
@@ -226,15 +313,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = hass.data[DOMAIN][entry.entry_id]
         data["state"].update(fresh_state)
         data["topic_lookup"] = build_topic_lookup(data["state"], entry)
+        data["virtual_refs"] = {ref for ref, device in data["state"].items() if _is_virtual_device(device)}
         data["stats"]["manual_reloads"] += 1
         data["stats"]["last_refresh_devices"] = len(fresh_state)
+        data["stats"]["virtual_devices"] = len(data["virtual_refs"])
         data["stats"]["last_api_ok"] = True
         data["stats"]["consecutive_api_failures"] = 0
         for ref in fresh_state:
             hass.loop.call_soon_threadsafe(
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
             )
-        _LOGGER.info("Manual HomeSeer device reload completed; devices=%s cached=%s", len(fresh_state), len(data["state"]))
+        _LOGGER.info("Manual HomeSeer device reload completed; devices=%s cached=%s virtual=%s", len(fresh_state), len(data["state"]), len(data["virtual_refs"]))
 
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH_ALL):
         hass.services.async_register(DOMAIN, SERVICE_REFRESH_ALL, handle_refresh_all)
@@ -247,8 +336,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
 
     _LOGGER.info(
-        "HomeSeer Bridge v1.5.0 subscribed to %s with %s devices, %s topic lookup keys, refresh=%ss reconnect=%ss",
-        wildcard_topic, len(state), len(topic_lookup), refresh_interval, reconnect_interval
+        "HomeSeer Bridge v1.5.2 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -268,6 +357,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["unsub_refresh"]()
     if data and data.get("unsub_reconnect_watch"):
         data["unsub_reconnect_watch"]()
+    if data and data.get("unsub_virtual_poll"):
+        data["unsub_virtual_poll"]()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
