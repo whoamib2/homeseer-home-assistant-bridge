@@ -9,17 +9,20 @@ from .const import (
     CONF_HS_URL,
     CONF_MQTT_PREFIX,
     CONF_EXCLUDED_TERMS,
+    CONF_ENABLE_DEBUG_LOGGING,
+    CONF_REFRESH_INTERVAL_SECONDS,
+    CONF_RECONNECT_INTERVAL_SECONDS,
     DEFAULT_HS_URL,
     DEFAULT_MQTT_PREFIX,
     DEFAULT_EXCLUDED_TERMS,
-    CONF_ENABLE_DEBUG_LOGGING,
     DEFAULT_ENABLE_DEBUG_LOGGING,
-    CONF_REFRESH_INTERVAL_SECONDS,
     DEFAULT_REFRESH_INTERVAL_SECONDS,
+    DEFAULT_RECONNECT_INTERVAL_SECONDS,
 )
 
+
 class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     def async_get_options_flow(config_entry):
@@ -37,8 +40,10 @@ class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_EXCLUDED_TERMS, default=DEFAULT_EXCLUDED_TERMS): str,
             vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=DEFAULT_ENABLE_DEBUG_LOGGING): bool,
             vol.Optional(CONF_REFRESH_INTERVAL_SECONDS, default=DEFAULT_REFRESH_INTERVAL_SECONDS): int,
+            vol.Optional(CONF_RECONNECT_INTERVAL_SECONDS, default=DEFAULT_RECONNECT_INTERVAL_SECONDS): int,
         })
         return self.async_show_form(step_id="user", data_schema=schema, errors={})
+
 
 class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry):
@@ -67,6 +72,10 @@ class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_REFRESH_INTERVAL_SECONDS,
                 default=options.get(CONF_REFRESH_INTERVAL_SECONDS, data.get(CONF_REFRESH_INTERVAL_SECONDS, DEFAULT_REFRESH_INTERVAL_SECONDS)),
+            ): int,
+            vol.Optional(
+                CONF_RECONNECT_INTERVAL_SECONDS,
+                default=options.get(CONF_RECONNECT_INTERVAL_SECONDS, data.get(CONF_RECONNECT_INTERVAL_SECONDS, DEFAULT_RECONNECT_INTERVAL_SECONDS)),
             ): int,
         })
         return self.async_show_form(step_id="init", data_schema=schema, errors={})

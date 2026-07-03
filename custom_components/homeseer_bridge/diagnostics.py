@@ -5,13 +5,20 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
+REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
+
+
+def _redact_dict(data: dict) -> dict:
+    out = {}
+    for key, value in data.items():
+        if any(s in str(key).lower() for s in REDACT_KEYS):
+            out[key] = "**REDACTED**"
+        else:
+            out[key] = value
+    return out
+
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry):
-    """Return diagnostics for the HomeSeer Bridge config entry.
-
-    Keep this module intentionally lightweight and defensive so diagnostics
-    cannot break integration setup.
-    """
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
     state = data.get("state") or {}
     topic_lookup = data.get("topic_lookup") or {}
@@ -29,24 +36,22 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
 
     sample_devices = []
     for device in list(state.values())[:50]:
-        sample_devices.append(
-            {
-                "ref": device.get("ref"),
-                "name": device.get("name"),
-                "location": device.get("location"),
-                "location2": device.get("location2"),
-                "status": device.get("status"),
-                "value": device.get("value"),
-                "device_type": device.get("device_type"),
-                "interface": device.get("interface"),
-            }
-        )
+        sample_devices.append({
+            "ref": device.get("ref"),
+            "name": device.get("name"),
+            "location": device.get("location"),
+            "location2": device.get("location2"),
+            "status": device.get("status"),
+            "value": device.get("value"),
+            "device_type": device.get("device_type"),
+            "interface": device.get("interface"),
+        })
 
     return {
         "entry": {
             "title": entry.title,
-            "data_keys": sorted(list(entry.data.keys())),
-            "options_keys": sorted(list(entry.options.keys())),
+            "data": _redact_dict(dict(entry.data)),
+            "options": _redact_dict(dict(entry.options)),
         },
         "counts": {
             "devices_loaded": len(state),

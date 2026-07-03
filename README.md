@@ -1,5 +1,15 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.5.0
+
+- Adds automatic reconnect/backoff checks after HomeSeer API failures.
+- Adds redacted diagnostics output for config data and options.
+- Adds reconnect statistics to diagnostics.
+- Expands options flow with reconnect interval setting.
+- Improves local brand icon/logo assets.
+- Keeps HACS-compliant metadata from v1.4.0.
+
+
 ## v1.4.0
 
 - Updates `manifest.json` for stricter Home Assistant/HACS validation.
