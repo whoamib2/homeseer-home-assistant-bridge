@@ -12,7 +12,7 @@ from .helpers import is_fan, is_excluded, on_value, off_value
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     state = hass.data[DOMAIN][entry.entry_id]["state"]
     async_add_entities([
-        HomeSeerFan(entry, ref)
+        HomeSeerFan(entry, ref, device)
         for ref, device in state.items()
         if is_fan(device) and not is_excluded(device, entry) and not device.get("hide")
     ])

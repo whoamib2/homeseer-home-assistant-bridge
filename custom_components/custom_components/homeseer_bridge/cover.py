@@ -12,7 +12,7 @@ from .helpers import is_cover, is_excluded
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     state = hass.data[DOMAIN][entry.entry_id]["state"]
     async_add_entities([
-        HomeSeerCover(entry, ref)
+        HomeSeerCover(entry, ref, device)
         for ref, device in state.items()
         if is_cover(device) and not is_excluded(device, entry) and not device.get("hide")
     ])

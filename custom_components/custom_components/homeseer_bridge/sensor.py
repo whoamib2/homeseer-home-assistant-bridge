@@ -12,14 +12,14 @@ from .helpers import is_plain_sensor, is_excluded, sensor_device_class, unit_of_
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     state = hass.data[DOMAIN][entry.entry_id]["state"]
     async_add_entities([
-        HomeSeerSensor(entry, ref)
+        HomeSeerSensor(entry, ref, device)
         for ref, device in state.items()
         if is_plain_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ])
 
 class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
-    def __init__(self, entry, ref):
-        super().__init__(entry, ref)
+    def __init__(self, entry, ref, device):
+        super().__init__(entry, ref, device)
         self._attr_device_class = sensor_device_class(self.device)
         self._attr_native_unit_of_measurement = unit_of_measurement(self.device)
 

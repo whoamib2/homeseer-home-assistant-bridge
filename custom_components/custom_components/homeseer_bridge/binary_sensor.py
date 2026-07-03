@@ -12,14 +12,14 @@ from .helpers import is_binary_sensor, is_excluded, binary_device_class
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     state = hass.data[DOMAIN][entry.entry_id]["state"]
     async_add_entities([
-        HomeSeerBinarySensor(entry, ref)
+        HomeSeerBinarySensor(entry, ref, device)
         for ref, device in state.items()
         if is_binary_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ])
 
 class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):
-    def __init__(self, entry, ref):
-        super().__init__(entry, ref)
+    def __init__(self, entry, ref, device):
+        super().__init__(entry, ref, device)
         self._attr_device_class = binary_device_class(self.device)
 
     def unique_id_for_ref(self, ref: int) -> str:

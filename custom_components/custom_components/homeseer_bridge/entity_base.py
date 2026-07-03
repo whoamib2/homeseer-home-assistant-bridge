@@ -8,17 +8,19 @@ from .helpers import device_info, full_name
 class HomeSeerEntityBase:
     _attr_has_entity_name = False
 
-    def __init__(self, entry, ref: int):
+    def __init__(self, entry, ref: int, initial_device: dict):
         self.entry = entry
         self.ref = ref
-        device = self.device
-        self._attr_name = full_name(device)
+        self._initial_device = initial_device
+        self._attr_name = full_name(initial_device)
         self._attr_unique_id = self.unique_id_for_ref(ref)
-        self._attr_device_info = device_info(device)
+        self._attr_device_info = device_info(initial_device)
 
     @property
     def device(self) -> dict:
-        return self.hass.data[DOMAIN][self.entry.entry_id]["state"].get(self.ref, {})
+        if getattr(self, "hass", None) is None:
+            return self._initial_device
+        return self.hass.data[DOMAIN][self.entry.entry_id]["state"].get(self.ref, self._initial_device)
 
     @property
     def available(self) -> bool:
