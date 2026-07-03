@@ -3,60 +3,59 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_HS_URL, CONF_MQTT_PREFIX, CONF_EXCLUDED_TERMS, CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS
-from .helpers import is_excluded, text_blob
+from .const import DOMAIN
+
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry):
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    state = data.get("state", {})
-    topic_lookup = data.get("topic_lookup", {})
-    unmatched = data.get("unmatched_topics", {})
+    """Return diagnostics for the HomeSeer Bridge config entry.
 
-    platform_counts = {}
-    excluded_count = 0
+    Keep this module intentionally lightweight and defensive so diagnostics
+    cannot break integration setup.
+    """
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    state = data.get("state") or {}
+    topic_lookup = data.get("topic_lookup") or {}
+    unmatched = data.get("unmatched_topics") or {}
+    stats = data.get("stats") or {}
+
     interfaces = {}
+    device_types = {}
 
     for device in state.values():
-        interface = device.get("interface") or "Unknown"
+        interface = str(device.get("interface") or "Unknown")
+        device_type = str(device.get("device_type") or "Unknown")
         interfaces[interface] = interfaces.get(interface, 0) + 1
-        if is_excluded(device, entry):
-            excluded_count += 1
-        model = device.get("device_type") or "Unknown"
-        platform_counts[model] = platform_counts.get(model, 0) + 1
+        device_types[device_type] = device_types.get(device_type, 0) + 1
+
+    sample_devices = []
+    for device in list(state.values())[:50]:
+        sample_devices.append(
+            {
+                "ref": device.get("ref"),
+                "name": device.get("name"),
+                "location": device.get("location"),
+                "location2": device.get("location2"),
+                "status": device.get("status"),
+                "value": device.get("value"),
+                "device_type": device.get("device_type"),
+                "interface": device.get("interface"),
+            }
+        )
 
     return {
         "entry": {
             "title": entry.title,
-            "data": {
-                CONF_HS_URL: entry.data.get(CONF_HS_URL),
-                CONF_MQTT_PREFIX: entry.data.get(CONF_MQTT_PREFIX),
-                CONF_EXCLUDED_TERMS: entry.data.get(CONF_EXCLUDED_TERMS),
-                CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS: entry.data.get(CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS),
-            },
-            "options": dict(entry.options),
+            "data_keys": sorted(list(entry.data.keys())),
+            "options_keys": sorted(list(entry.options.keys())),
         },
         "counts": {
             "devices_loaded": len(state),
             "topic_lookup_keys": len(topic_lookup),
-            "excluded_devices": excluded_count,
             "unmatched_topics_seen": len(unmatched),
         },
+        "stats": stats,
         "interfaces": dict(sorted(interfaces.items())),
-        "device_type_counts": dict(sorted(platform_counts.items())),
-        "stats": data.get("stats", {}),
+        "device_types": dict(sorted(device_types.items())),
         "recent_unmatched_topics": dict(list(unmatched.items())[-50:]),
-        "sample_devices": [
-            {
-                "ref": d.get("ref"),
-                "name": d.get("name"),
-                "location": d.get("location"),
-                "location2": d.get("location2"),
-                "status": d.get("status"),
-                "value": d.get("value"),
-                "device_type": d.get("device_type"),
-                "interface": d.get("interface"),
-                "excluded": is_excluded(d, entry),
-            }
-            for d in list(state.values())[:50]
-        ],
+        "sample_devices": sample_devices,
     }

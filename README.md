@@ -1,5 +1,11 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.3.1
+
+- Fixes diagnostics import/setup error.
+- Makes diagnostics defensive so it cannot prevent the integration from loading.
+
+
 ## v1.3.0
 
 - Adds Home Assistant services:
