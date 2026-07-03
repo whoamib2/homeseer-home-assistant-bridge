@@ -3,7 +3,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_HS_URL, CONF_MQTT_PREFIX, CONF_EXCLUDED_TERMS, CONF_ENABLE_DEBUG_LOGGING
+from .const import DOMAIN, CONF_HS_URL, CONF_MQTT_PREFIX, CONF_EXCLUDED_TERMS, CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS
 from .helpers import is_excluded, text_blob
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry):
@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
                 CONF_HS_URL: entry.data.get(CONF_HS_URL),
                 CONF_MQTT_PREFIX: entry.data.get(CONF_MQTT_PREFIX),
                 CONF_EXCLUDED_TERMS: entry.data.get(CONF_EXCLUDED_TERMS),
-                CONF_ENABLE_DEBUG_LOGGING: entry.data.get(CONF_ENABLE_DEBUG_LOGGING),
+                CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS: entry.data.get(CONF_ENABLE_DEBUG_LOGGING, CONF_REFRESH_INTERVAL_SECONDS),
             },
             "options": dict(entry.options),
         },
@@ -43,6 +43,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         },
         "interfaces": dict(sorted(interfaces.items())),
         "device_type_counts": dict(sorted(platform_counts.items())),
+        "stats": data.get("stats", {}),
         "recent_unmatched_topics": dict(list(unmatched.items())[-50:]),
         "sample_devices": [
             {

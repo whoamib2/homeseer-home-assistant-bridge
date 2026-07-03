@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.2.0
+
+- Adds incremental API refresh to keep HomeSeer and Home Assistant synchronized.
+- Default refresh interval is 600 seconds; set to 0 to disable.
+- MQTT remains the fast path for instant updates.
+- API refresh preserves cached devices if HomeSeer returns a partial response.
+- Rebuilds MQTT topic lookup after refresh so renamed/new devices can match.
+
+
 ## v1.1.0
 
 - Includes v1.0.2 thread-safety fix for MQTT-driven updates.
