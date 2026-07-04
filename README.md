@@ -1,5 +1,12 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.7.2
+
+- Fixes startup ordering issue where HomeSeer Bridge could load before MQTT was ready.
+- Adds `mqtt` as a Home Assistant integration dependency in `manifest.json`.
+- Keeps the v1.7.1 Bridge Monitor entity fix.
+
+
 ## v1.7.1
 
 - Fixes Bridge Monitor entities by adding them directly to the existing `sensor` and `binary_sensor` platforms.
