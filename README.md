@@ -1,5 +1,13 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.7.1
+
+- Fixes Bridge Monitor entities by adding them directly to the existing `sensor` and `binary_sensor` platforms.
+- Adds HomeSeer Bridge monitor sensors for device count, virtual devices, MQTT updates, API refreshes, API latency, virtual polling, new devices, unmatched topics, and health score.
+- Adds HomeSeer Bridge monitor binary sensors for connected and API healthy state.
+- Keeps the shared `bridge_stats.py` helper.
+
+
 ## v1.7.0
 
 - Adds Bridge Monitor sensors for device count, MQTT updates, API refreshes, API latency, virtual polling, new-device discovery, unmatched topics, and health score.

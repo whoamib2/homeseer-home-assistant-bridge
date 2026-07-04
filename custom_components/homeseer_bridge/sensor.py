@@ -1,40 +1,55 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
-from .helpers import is_plain_sensor, is_excluded, sensor_device_class, unit_of_measurement
+from .helpers import (
+    is_plain_sensor,
+    is_excluded,
+    sensor_device_class,
+    unit_of_measurement,
+)
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    state = hass.data[DOMAIN][entry.entry_id]["state"]
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    data = hass.data[DOMAIN][entry.entry_id]
+    state = data["state"]
+
     entities = [
         HomeSeerSensor(entry, ref, device)
         for ref, device in state.items()
         if is_plain_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ]
-    entities.extend(HomeSeerBridgeMonitorSensor(entry, key, name, unit) for key, name, unit in MONITOR_SENSORS)
+
+    entities.extend(
+        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+        for key, name, unit in MONITOR_SENSORS
+    )
+
     async_add_entities(entities)
 
-class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
-    def __init__(self, entry, ref, device):
-        super().__init__(entry, ref, device)
-        self._attr_device_class = sensor_device_class(self.device)
-        self._attr_native_unit_of_measurement = unit_of_measurement(self.device)
 
+class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
     def unique_id_for_ref(self, ref: int) -> str:
-        return f"homeseer_bridge_{ref}_sensor"
+        return f"homeseer_sensor_{ref}"
 
     @property
     def native_value(self):
-        value = self.device.get("numeric_value")
-        if value is not None:
-            return value
-        return self.device.get("status")
+        device = self.device
+        value = device.get("numeric_value", device.get("value"))
+        if value is None:
+            return device.get("status")
+        return value
 
+    @property
+    def device_class(self):
+        return sensor_device_class(self.device)
+
+    @property
+    def native_unit_of_measurement(self):
+        return unit_of_measurement(self.device)
 
 
 MONITOR_SENSORS = [
@@ -66,7 +81,10 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
 
     @property
     def available(self):
-        return getattr(self, "hass", None) is not None and self.entry.entry_id in self.hass.data.get(DOMAIN, {})
+        return (
+            getattr(self, "hass", None) is not None
+            and self.entry.entry_id in self.hass.data.get(DOMAIN, {})
+        )
 
     @property
     def native_value(self):
@@ -91,4 +109,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "api_healthy": stats.get("last_api_ok"),
             "consecutive_api_failures": stats.get("consecutive_api_failures"),
             "topic_lookup_keys": len(data.get("topic_lookup") or {}),
+            "reconnect_attempts": stats.get("reconnect_attempts"),
+            "reconnect_successes": stats.get("reconnect_successes"),
         }

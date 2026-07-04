@@ -1,40 +1,57 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_binary_sensor, is_excluded, binary_device_class
+from .bridge_stats import ensure_stats, health_score
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    state = hass.data[DOMAIN][entry.entry_id]["state"]
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    data = hass.data[DOMAIN][entry.entry_id]
+    state = data["state"]
+
     entities = [
         HomeSeerBinarySensor(entry, ref, device)
         for ref, device in state.items()
         if is_binary_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ]
-    entities.extend(HomeSeerBridgeMonitorBinarySensor(entry, key, name) for key, name in MONITOR_BINARY_SENSORS)
+
+    entities.extend(
+        HomeSeerBridgeMonitorBinarySensor(entry, key, name)
+        for key, name in MONITOR_BINARY_SENSORS
+    )
+
     async_add_entities(entities)
 
-class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):
-    def __init__(self, entry, ref, device):
-        super().__init__(entry, ref, device)
-        self._attr_device_class = binary_device_class(self.device)
 
+class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):
     def unique_id_for_ref(self, ref: int) -> str:
-        return f"homeseer_bridge_{ref}_binary_sensor"
+        return f"homeseer_binary_sensor_{ref}"
 
     @property
     def is_on(self):
-        value = self.device.get("numeric_value")
-        status = str(self.device.get("status", "")).strip().lower()
-        if value is not None:
-            return value > 0
-        return status in ("on", "open", "active", "detected", "wet", "unlocked", "tampered")
+        device = self.device
+        value = device.get("numeric_value", device.get("value"))
+        status = str(device.get("status") or "").lower()
 
+        if value is not None:
+            try:
+                return float(value) != 0
+            except (TypeError, ValueError):
+                pass
+
+        if status in {"on", "open", "wet", "motion", "detected", "true", "yes", "unlocked"}:
+            return True
+        if status in {"off", "closed", "dry", "clear", "false", "no", "locked"}:
+            return False
+
+        return None
+
+    @property
+    def device_class(self):
+        return binary_device_class(self.device)
 
 
 MONITOR_BINARY_SENSORS = [
@@ -54,7 +71,10 @@ class HomeSeerBridgeMonitorBinarySensor(BinarySensorEntity):
 
     @property
     def available(self):
-        return getattr(self, "hass", None) is not None and self.entry.entry_id in self.hass.data.get(DOMAIN, {})
+        return (
+            getattr(self, "hass", None) is not None
+            and self.entry.entry_id in self.hass.data.get(DOMAIN, {})
+        )
 
     @property
     def is_on(self):
