@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.7.0
+
+- Adds Bridge Monitor sensors for device count, MQTT updates, API refreshes, API latency, virtual polling, new-device discovery, unmatched topics, and health score.
+- Adds Bridge Monitor binary sensors for connected/API healthy state.
+- Adds lightweight `BridgeStats` helpers used by diagnostics and monitor entities.
+- Tracks API refresh latency, virtual poll latency, and last MQTT message age.
+- Keeps automatic discovery from v1.6.0 and diagnostics improvements from v1.6.1.
+
+
 ## v1.6.1
 
 - Expands diagnostics with a clearer health summary.

@@ -4,6 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
 
 REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
 
@@ -32,7 +33,8 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
     state = data.get("state") or {}
     topic_lookup = data.get("topic_lookup") or {}
     unmatched = data.get("unmatched_topics") or {}
-    stats = data.get("stats") or {}
+    stats = ensure_stats(data)
+    refresh_derived_stats(stats)
     virtual_refs = data.get("virtual_refs") or set()
 
     platform_counts = {}
@@ -74,6 +76,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "minor_version": entry.minor_version,
         },
         "health": {
+            "health_score": health_score(data),
             "last_api_ok": stats.get("last_api_ok"),
             "consecutive_api_failures": stats.get("consecutive_api_failures"),
             "mqtt_updates": stats.get("mqtt_updates"),

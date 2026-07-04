@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from time import monotonic
 
 import voluptuous as vol
 
@@ -28,6 +29,7 @@ from .const import (
     DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
+from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +82,11 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     if not data:
         return 0
 
+    stats = ensure_stats(data)
+    start = monotonic()
     fresh_state = await api.async_get_status()
+    record_latency_ms(stats, "api_latency_ms", start)
+    refresh_derived_stats(stats)
     changed_refs: list[int] = []
     new_refs: list[int] = []
     current_state = data["state"]
@@ -129,7 +135,11 @@ async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: Ho
     if not virtual_refs:
         return 0
 
+    stats = ensure_stats(data)
+    start = monotonic()
     fresh_state = await api.async_get_status()
+    record_latency_ms(stats, "virtual_poll_latency_ms", start)
+    refresh_derived_stats(stats)
     current_state = data["state"]
     changed_refs: list[int] = []
 
@@ -208,6 +218,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         },
     }
 
+    ensure_stats(hass.data[DOMAIN][entry.entry_id])
+
     wildcard_topic = f"{mqtt_prefix(entry)}/#"
     debug_logging = entry.options.get(
         CONF_ENABLE_DEBUG_LOGGING,
@@ -240,7 +252,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("HomeSeer MQTT update matched ref=%s topic=%s payload=%s", ref, msg.topic, msg.payload)
 
         apply_mqtt_state(device, msg.payload)
-        data["stats"]["mqtt_updates"] += 1
+        mark_mqtt_update(ensure_stats(data))
         hass.loop.call_soon_threadsafe(
             async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
         )
@@ -363,7 +375,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
 
     _LOGGER.info(
-        "HomeSeer Bridge v1.6.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v1.7.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
