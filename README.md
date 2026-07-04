@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.6.0
+
+- Adds automatic new-device discovery.
+- Scheduled HomeSeer API refresh now detects newly added HomeSeer refs.
+- When new refs are found, the integration schedules a safe reload so Home Assistant creates the new entities.
+- Adds new-device discovery counters in diagnostics stats.
+- Keeps MQTT as the instant update path and keeps virtual-device polling from v1.5.2.
+
+
 ## v1.5.2
 
 - Adds hybrid sync for HomeSeer virtual devices that do not publish MQTT.

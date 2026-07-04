@@ -82,10 +82,13 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
 
     fresh_state = await api.async_get_status()
     changed_refs: list[int] = []
+    new_refs: list[int] = []
     current_state = data["state"]
 
     for ref, new_device in fresh_state.items():
         old_device = current_state.get(ref)
+        if old_device is None:
+            new_refs.append(ref)
         if _device_changed(old_device, new_device):
             current_state[ref] = new_device
             changed_refs.append(ref)
@@ -98,6 +101,16 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     data["stats"]["last_api_ok"] = True
     data["stats"]["consecutive_api_failures"] = 0
     data["stats"]["virtual_devices"] = len(data["virtual_refs"])
+    data["stats"]["last_new_devices"] = len(new_refs)
+    data["stats"]["total_new_devices_seen"] = data["stats"].get("total_new_devices_seen", 0) + len(new_refs)
+
+    if new_refs and not data.get("reload_scheduled"):
+        data["reload_scheduled"] = True
+        _LOGGER.info(
+            "HomeSeer Bridge discovered %s new HomeSeer devices; scheduling integration reload so new entities are created",
+            len(new_refs),
+        )
+        hass.async_create_task(_async_reload_for_new_devices(hass, entry))
 
     for ref in changed_refs:
         hass.loop.call_soon_threadsafe(
@@ -145,6 +158,16 @@ async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: Ho
     return len(changed_refs)
 
 
+
+async def _async_reload_for_new_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry after a refresh finds new HomeSeer refs.
+
+    Known refs can be updated immediately, but brand-new refs need a
+    config-entry reload so platform setup can create the new entities.
+    """
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     api = HomeSeerApi(session, entry.data[CONF_HS_URL])
@@ -164,6 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unsub_reconnect_watch": None,
         "unsub_virtual_poll": None,
         "unmatched_topics": {},
+        "reload_scheduled": False,
         "stats": {
             "mqtt_updates": 0,
             "api_refreshes": 0,
@@ -179,6 +203,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "virtual_devices": len(virtual_refs),
             "virtual_polls": 0,
             "last_virtual_poll_changed": 0,
+            "last_new_devices": 0,
+            "total_new_devices_seen": 0,
         },
     }
 
@@ -319,6 +345,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["stats"]["virtual_devices"] = len(data["virtual_refs"])
         data["stats"]["last_api_ok"] = True
         data["stats"]["consecutive_api_failures"] = 0
+        data["reload_scheduled"] = False
         for ref in fresh_state:
             hass.loop.call_soon_threadsafe(
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
@@ -336,7 +363,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
 
     _LOGGER.info(
-        "HomeSeer Bridge v1.5.2 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v1.6.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
