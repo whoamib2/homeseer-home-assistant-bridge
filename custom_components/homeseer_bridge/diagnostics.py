@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available
 
 REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
 
@@ -27,6 +29,12 @@ def _count_by(state: dict, key: str) -> dict:
     return dict(sorted(counts.items()))
 
 
+def _iso(ts):
+    if not ts:
+        return None
+    return datetime.fromtimestamp(float(ts), tz=timezone.utc).isoformat()
+
+
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry):
     """Return redacted diagnostics for HomeSeer Bridge."""
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
@@ -37,17 +45,12 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
     refresh_derived_stats(stats)
     virtual_refs = data.get("virtual_refs") or set()
 
-    platform_counts = {}
     status_counts = {}
     unavailable_refs = []
 
     for ref, device in state.items():
-        device_type = str(device.get("device_type") or device.get("device_type_string") or "Unknown")
-        platform_counts[device_type] = platform_counts.get(device_type, 0) + 1
-
         status = str(device.get("status") or "Unknown")
         status_counts[status] = status_counts.get(status, 0) + 1
-
         if status.lower() in {"unknown", "unavailable", "no status"}:
             unavailable_refs.append(ref)
 
@@ -75,8 +78,15 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "version": entry.version,
             "minor_version": entry.minor_version,
         },
-        "health": {
+        "summary": {
             "health_score": health_score(data),
+            "bridge_available": bridge_available(data),
+            "devices_loaded": len(state),
+            "virtual_devices": len(virtual_refs),
+            "topic_lookup_keys": len(topic_lookup),
+            "unmatched_topics_seen": len(unmatched),
+        },
+        "health": {
             "last_api_ok": stats.get("last_api_ok"),
             "consecutive_api_failures": stats.get("consecutive_api_failures"),
             "mqtt_updates": stats.get("mqtt_updates"),
@@ -92,20 +102,21 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "last_refresh_devices": stats.get("last_refresh_devices"),
             "last_new_devices": stats.get("last_new_devices"),
             "total_new_devices_seen": stats.get("total_new_devices_seen"),
-        },
-        "counts": {
-            "devices_loaded": len(state),
-            "topic_lookup_keys": len(topic_lookup),
-            "unmatched_topics_seen": len(unmatched),
-            "virtual_devices": len(virtual_refs),
-            "unavailable_or_unknown_sample_count": len(unavailable_refs),
+            "api_latency_ms": stats.get("api_latency_ms"),
+            "virtual_poll_latency_ms": stats.get("virtual_poll_latency_ms"),
+            "last_mqtt_age_seconds": stats.get("last_mqtt_age_seconds"),
+            "last_mqtt_timestamp": _iso(stats.get("last_mqtt_timestamp")),
+            "last_api_refresh_timestamp": _iso(stats.get("last_api_refresh_timestamp")),
+            "last_virtual_poll_timestamp": _iso(stats.get("last_virtual_poll_timestamp")),
+            "integration_started_timestamp": _iso(stats.get("integration_started_timestamp")),
         },
         "breakdowns": {
             "interfaces": _count_by(state, "interface"),
             "interface_names": _count_by(state, "interface_name"),
             "locations": _count_by(state, "location"),
             "location2": _count_by(state, "location2"),
-            "device_types": dict(sorted(platform_counts.items())),
+            "device_types": _count_by(state, "device_type"),
+            "device_type_strings": _count_by(state, "device_type_string"),
             "statuses": dict(sorted(status_counts.items())),
         },
         "samples": {

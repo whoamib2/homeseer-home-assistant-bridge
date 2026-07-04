@@ -3,6 +3,7 @@ from __future__ import annotations
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, SIGNAL_STATE_UPDATED
+from .bridge_stats import bridge_available
 from .helpers import device_info, full_name
 
 class HomeSeerEntityBase:

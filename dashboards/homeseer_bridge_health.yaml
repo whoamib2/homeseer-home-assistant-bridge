@@ -1,0 +1,44 @@
+title: HomeSeer Bridge
+views:
+  - title: Bridge Health
+    path: homeseer-bridge
+    icon: mdi:home-automation
+    cards:
+      - type: entities
+        title: HomeSeer Bridge Health
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.homeseer_bridge_connected
+            name: Bridge Connected
+          - entity: binary_sensor.homeseer_bridge_api_healthy
+            name: API Healthy
+          - entity: sensor.homeseer_bridge_health_score
+            name: Health Score
+          - entity: sensor.homeseer_bridge_api_latency
+            name: API Latency
+          - entity: sensor.homeseer_bridge_last_mqtt_age
+            name: Last MQTT Age
+      - type: entities
+        title: Device Counts
+        show_header_toggle: false
+        entities:
+          - entity: sensor.homeseer_bridge_devices
+            name: Devices
+          - entity: sensor.homeseer_bridge_virtual_devices
+            name: Virtual Devices
+          - entity: sensor.homeseer_bridge_unmatched_topics
+            name: Unmatched Topics
+      - type: entities
+        title: Activity
+        show_header_toggle: false
+        entities:
+          - entity: sensor.homeseer_bridge_mqtt_updates
+            name: MQTT Updates
+          - entity: sensor.homeseer_bridge_api_refreshes
+            name: API Refreshes
+          - entity: sensor.homeseer_bridge_virtual_polls
+            name: Virtual Polls
+          - entity: sensor.homeseer_bridge_last_refresh_changes
+            name: Last Refresh Changes
+          - entity: sensor.homeseer_bridge_new_devices_seen
+            name: New Devices Seen

@@ -1,5 +1,13 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.8.0
+
+- Adds bridge-level availability handling so HomeSeer entities become unavailable when the bridge/API is unhealthy.
+- Expands diagnostics with summary, timestamps, API latency, virtual poll latency, last MQTT age, and richer breakdowns.
+- Adds a ready-to-copy Lovelace dashboard YAML at `dashboards/homeseer_bridge_health.yaml`.
+- Keeps Bridge Monitor entities from v1.7.x and MQTT dependency fix.
+
+
 ## v1.7.2
 
 - Fixes startup ordering issue where HomeSeer Bridge could load before MQTT was ready.

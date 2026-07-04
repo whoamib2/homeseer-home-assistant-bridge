@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from time import monotonic
+from time import monotonic, time
 
 
 def ensure_stats(data: dict) -> dict:
@@ -25,17 +25,30 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("virtual_poll_latency_ms", None)
     stats.setdefault("last_mqtt_age_seconds", None)
     stats.setdefault("last_mqtt_monotonic", None)
+    stats.setdefault("last_mqtt_timestamp", None)
+    stats.setdefault("last_api_refresh_timestamp", None)
+    stats.setdefault("last_virtual_poll_timestamp", None)
+    stats.setdefault("integration_started_timestamp", stats.get("integration_started_timestamp") or time())
     return stats
 
 
 def mark_mqtt_update(stats: dict) -> None:
     stats["mqtt_updates"] = stats.get("mqtt_updates", 0) + 1
     stats["last_mqtt_monotonic"] = monotonic()
+    stats["last_mqtt_timestamp"] = time()
     stats["last_mqtt_age_seconds"] = 0
 
 
 def record_latency_ms(stats: dict, key: str, start: float) -> None:
     stats[key] = round((monotonic() - start) * 1000, 2)
+
+
+def mark_api_refresh(stats: dict) -> None:
+    stats["last_api_refresh_timestamp"] = time()
+
+
+def mark_virtual_poll(stats: dict) -> None:
+    stats["last_virtual_poll_timestamp"] = time()
 
 
 def refresh_derived_stats(stats: dict) -> None:
@@ -74,3 +87,8 @@ def health_score(data: dict) -> int:
         score -= 3
 
     return max(0, min(100, score))
+
+
+def bridge_available(data: dict) -> bool:
+    stats = ensure_stats(data)
+    return bool(stats.get("last_api_ok", True)) and health_score(data) >= 50

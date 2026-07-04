@@ -29,7 +29,7 @@ from .const import (
     DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
-from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats
+from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     start = monotonic()
     fresh_state = await api.async_get_status()
     record_latency_ms(stats, "api_latency_ms", start)
+    mark_api_refresh(stats)
     refresh_derived_stats(stats)
     changed_refs: list[int] = []
     new_refs: list[int] = []
@@ -139,6 +140,7 @@ async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: Ho
     start = monotonic()
     fresh_state = await api.async_get_status()
     record_latency_ms(stats, "virtual_poll_latency_ms", start)
+    mark_virtual_poll(stats)
     refresh_derived_stats(stats)
     current_state = data["state"]
     changed_refs: list[int] = []
@@ -219,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     ensure_stats(hass.data[DOMAIN][entry.entry_id])
+    hass.data[DOMAIN][entry.entry_id]["stats"]["last_api_refresh_timestamp"] = hass.data[DOMAIN][entry.entry_id]["stats"].get("last_api_refresh_timestamp")
 
     wildcard_topic = f"{mqtt_prefix(entry)}/#"
     debug_logging = entry.options.get(
@@ -375,7 +378,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
 
     _LOGGER.info(
-        "HomeSeer Bridge v1.7.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v1.8.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
