@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v1.6.1
+
+- Expands diagnostics with a clearer health summary.
+- Adds breakdowns by interface, location, device type, and status.
+- Adds virtual-device, new-device, reconnect, API refresh, and MQTT counters to diagnostics.
+- Adds samples for virtual refs, unavailable/unknown refs, unmatched MQTT topics, and devices.
+- Keeps sensitive config values redacted.
+
+
 ## v1.6.0
 
 - Adds automatic new-device discovery.
