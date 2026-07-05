@@ -27,3 +27,9 @@ reload_devices:
   name: Reload HomeSeer device cache
   description: Re-fetch devices from HomeSeer, rebuild MQTT topic lookup, and update entities where possible.
   fields: {}
+
+
+create_dashboard:
+  name: Create HomeSeer Bridge dashboard
+  description: Create the HomeSeer Bridge Lovelace dashboard if it does not already exist.
+  fields: {}

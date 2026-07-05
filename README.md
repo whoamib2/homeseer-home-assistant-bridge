@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.0.0
+
+- Automatically creates a HomeSeer Bridge Lovelace dashboard on startup if one does not already exist.
+- Adds the dashboard to the Home Assistant sidebar at `/homeseer-bridge`.
+- Does not overwrite an existing HomeSeer Bridge dashboard.
+- Adds `homeseer_bridge.create_dashboard` service to recreate the dashboard manually if needed.
+- Adds both full-dashboard and view-only dashboard YAML examples under `dashboards/`.
+
+
 ## v1.8.0
 
 - Adds bridge-level availability handling so HomeSeer entities become unavailable when the bridge/API is unhealthy.

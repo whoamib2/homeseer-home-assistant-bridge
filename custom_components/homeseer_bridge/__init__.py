@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
+from .dashboard import async_ensure_dashboard
 from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_REFRESH_ALL = "refresh_all"
 SERVICE_CONTROL_DEVICE = "control_device"
 SERVICE_RELOAD_DEVICES = "reload_devices"
+SERVICE_CREATE_DASHBOARD = "create_dashboard"
 
 
 def _device_changed(old: dict | None, new: dict) -> bool:
@@ -223,6 +225,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ensure_stats(hass.data[DOMAIN][entry.entry_id])
     hass.data[DOMAIN][entry.entry_id]["stats"]["last_api_refresh_timestamp"] = hass.data[DOMAIN][entry.entry_id]["stats"].get("last_api_refresh_timestamp")
 
+    hass.async_create_task(async_ensure_dashboard(hass))
+
     wildcard_topic = f"{mqtt_prefix(entry)}/#"
     debug_logging = entry.options.get(
         CONF_ENABLE_DEBUG_LOGGING,
@@ -349,6 +353,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
             )
 
+    async def handle_create_dashboard(call: ServiceCall):
+        created = await async_ensure_dashboard(hass)
+        _LOGGER.info("HomeSeer Bridge dashboard create service completed; created=%s", created)
+
     async def handle_reload_devices(call: ServiceCall):
         fresh_state = await api.async_get_status()
         data = hass.data[DOMAIN][entry.entry_id]
@@ -376,9 +384,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD_DEVICES):
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
+    if not hass.services.has_service(DOMAIN, SERVICE_CREATE_DASHBOARD):
+        hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v1.8.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.0.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
@@ -407,7 +417,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
     if not hass.data.get(DOMAIN):
-        for service in (SERVICE_REFRESH_ALL, SERVICE_CONTROL_DEVICE, SERVICE_RELOAD_DEVICES):
+        for service in (SERVICE_REFRESH_ALL, SERVICE_CONTROL_DEVICE, SERVICE_RELOAD_DEVICES, SERVICE_CREATE_DASHBOARD):
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
     return unload_ok
