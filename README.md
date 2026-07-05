@@ -1,5 +1,22 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.1.0
+
+- Improves Home Assistant device registry matching for HomeSeer devices.
+- Uses the HomeSeer ref as a stable device identifier so entities from the same HomeSeer device group more consistently.
+- Adds manufacturer, model, suggested area, and hub linkage metadata.
+- Links HomeSeer devices back to the HomeSeer Bridge hub with `via_device`.
+- Adds HomeSeer ref, location, interface, and device type attributes for easier troubleshooting.
+
+
+## v2.0.1
+
+- Updates the HomeSeer Bridge dashboard to use Home Assistant's modern Sections layout.
+- Adds `dashboards/homeseer_bridge_sections_view.yaml`, which can be pasted directly into a Sections dashboard view.
+- Updates the auto-created dashboard template to use the same Sections layout.
+- Adds dashboard import notes under `dashboards/README.md`.
+
+
 ## v2.0.0
 
 - Automatically creates a HomeSeer Bridge Lovelace dashboard on startup if one does not already exist.

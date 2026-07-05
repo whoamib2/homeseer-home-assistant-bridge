@@ -18,45 +18,55 @@ DASHBOARD_CONFIG_STORAGE_KEY = f"lovelace.{DASHBOARD_URL_PATH}"
 
 
 def _dashboard_config() -> dict[str, Any]:
+    """Return a modern Sections dashboard config."""
     return {
         "views": [
             {
-                "title": "Bridge Health",
-                "path": "health",
+                "type": "sections",
+                "title": "HomeSeer Bridge",
+                "path": "homeseer-bridge",
                 "icon": DASHBOARD_ICON,
-                "cards": [
+                "sections": [
                     {
-                        "type": "entities",
-                        "title": "HomeSeer Bridge Health",
-                        "show_header_toggle": False,
-                        "entities": [
-                            {"entity": "binary_sensor.homeseer_bridge_connected", "name": "Bridge Connected"},
-                            {"entity": "binary_sensor.homeseer_bridge_api_healthy", "name": "API Healthy"},
-                            {"entity": "sensor.homeseer_bridge_health_score", "name": "Health Score"},
-                            {"entity": "sensor.homeseer_bridge_api_latency", "name": "API Latency"},
-                            {"entity": "sensor.homeseer_bridge_last_mqtt_age", "name": "Last MQTT Age"},
+                        "type": "grid",
+                        "cards": [
+                            {"type": "heading", "heading": "HomeSeer Bridge Health"},
+                            {"type": "tile", "entity": "binary_sensor.homeseer_bridge_connected", "name": "Bridge Connected", "icon": "mdi:connection"},
+                            {"type": "tile", "entity": "binary_sensor.homeseer_bridge_api_healthy", "name": "API Healthy", "icon": "mdi:api"},
+                            {"type": "gauge", "entity": "sensor.homeseer_bridge_health_score", "name": "Health Score", "min": 0, "max": 100, "severity": {"green": 90, "yellow": 60, "red": 0}},
+                            {"type": "entities", "title": "Health Details", "entities": [
+                                {"entity": "sensor.homeseer_bridge_api_latency", "name": "API Latency"},
+                                {"entity": "sensor.homeseer_bridge_last_mqtt_age", "name": "Last MQTT Age"},
+                                {"entity": "sensor.homeseer_bridge_unmatched_topics", "name": "Unmatched Topics"},
+                            ]},
                         ],
                     },
                     {
-                        "type": "entities",
-                        "title": "Device Counts",
-                        "show_header_toggle": False,
-                        "entities": [
-                            {"entity": "sensor.homeseer_bridge_devices", "name": "Devices"},
-                            {"entity": "sensor.homeseer_bridge_virtual_devices", "name": "Virtual Devices"},
-                            {"entity": "sensor.homeseer_bridge_unmatched_topics", "name": "Unmatched Topics"},
+                        "type": "grid",
+                        "cards": [
+                            {"type": "heading", "heading": "Device Counts"},
+                            {"type": "tile", "entity": "sensor.homeseer_bridge_devices", "name": "Devices", "icon": "mdi:devices"},
+                            {"type": "tile", "entity": "sensor.homeseer_bridge_virtual_devices", "name": "Virtual Devices", "icon": "mdi:toggle-switch"},
+                            {"type": "entities", "title": "Counts", "entities": [
+                                {"entity": "sensor.homeseer_bridge_devices", "name": "Devices"},
+                                {"entity": "sensor.homeseer_bridge_virtual_devices", "name": "Virtual Devices"},
+                                {"entity": "sensor.homeseer_bridge_unmatched_topics", "name": "Unmatched Topics"},
+                            ]},
                         ],
                     },
                     {
-                        "type": "entities",
-                        "title": "Activity",
-                        "show_header_toggle": False,
-                        "entities": [
-                            {"entity": "sensor.homeseer_bridge_mqtt_updates", "name": "MQTT Updates"},
-                            {"entity": "sensor.homeseer_bridge_api_refreshes", "name": "API Refreshes"},
-                            {"entity": "sensor.homeseer_bridge_virtual_polls", "name": "Virtual Polls"},
-                            {"entity": "sensor.homeseer_bridge_last_refresh_changes", "name": "Last Refresh Changes"},
-                            {"entity": "sensor.homeseer_bridge_new_devices_seen", "name": "New Devices Seen"},
+                        "type": "grid",
+                        "cards": [
+                            {"type": "heading", "heading": "Activity"},
+                            {"type": "entities", "title": "Bridge Activity", "entities": [
+                                {"entity": "sensor.homeseer_bridge_mqtt_updates", "name": "MQTT Updates"},
+                                {"entity": "sensor.homeseer_bridge_api_refreshes", "name": "API Refreshes"},
+                                {"entity": "sensor.homeseer_bridge_virtual_polls", "name": "Virtual Polls"},
+                                {"entity": "sensor.homeseer_bridge_last_refresh_changes", "name": "Last Refresh Changes"},
+                                {"entity": "sensor.homeseer_bridge_new_devices_seen", "name": "New Devices Seen"},
+                            ]},
+                            {"type": "history-graph", "title": "API Latency", "hours_to_show": 24, "entities": ["sensor.homeseer_bridge_api_latency"]},
+                            {"type": "history-graph", "title": "Health Score", "hours_to_show": 24, "entities": ["sensor.homeseer_bridge_health_score"]},
                         ],
                     },
                 ],
