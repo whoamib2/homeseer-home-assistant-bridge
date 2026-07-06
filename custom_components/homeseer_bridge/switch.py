@@ -9,27 +9,13 @@ from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_controllable_switch, is_excluded, on_value, off_value
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    data = hass.data[DOMAIN][entry.entry_id]
-    state = data["state"]
-
-    refs = [
-        ref
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+    state = hass.data[DOMAIN][entry.entry_id]["state"]
+    async_add_entities([
+        HomeSeerSwitch(entry, ref, device)
         for ref, device in state.items()
         if is_controllable_switch(device) and not is_excluded(device, entry)
-    ]
-
-    entities = [
-        HomeSeerSwitch(entry, ref, device)
-        for ref in refs
-        for device in [state[ref]]
-    ]
-
-data.setdefault("entity_adders", {})["switch"] = async_add_entities
-data.setdefault("known_entity_refs", {}).setdefault("switch", set()).update(refs)
-async_add_entities(entities)
-
+    ])
 
 class HomeSeerSwitch(HomeSeerEntityBase, SwitchEntity):
     def unique_id_for_ref(self, ref: int) -> str:

@@ -1,14 +1,5 @@
 # HomeSeer Home Assistant Bridge
 
-## v2.2.0
-
-- Adds dynamic entity discovery for newly added HomeSeer devices without a full integration reload.
-- Stores platform entity adders and creates matching entities when new HomeSeer refs appear during API refresh.
-- Keeps the refresh-based discovery counters and adds entity-created counters.
-- Improves device registry matching with stable HomeSeer ref identifiers, model metadata, suggested area, and bridge hub linkage.
-- Adds HomeSeer ref/location/interface/type attributes for easier troubleshooting.
-
-
 ## v2.0.1
 
 - Updates the HomeSeer Bridge dashboard to use Home Assistant's modern Sections layout.

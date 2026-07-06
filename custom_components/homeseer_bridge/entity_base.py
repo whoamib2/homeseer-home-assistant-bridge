@@ -6,7 +6,6 @@ from .const import DOMAIN, SIGNAL_STATE_UPDATED
 from .bridge_stats import bridge_available
 from .helpers import device_info, full_name
 
-
 class HomeSeerEntityBase:
     _attr_has_entity_name = False
 
@@ -16,7 +15,7 @@ class HomeSeerEntityBase:
         self._initial_device = initial_device
         self._attr_name = full_name(initial_device)
         self._attr_unique_id = self.unique_id_for_ref(ref)
-        self._attr_device_info = device_info(initial_device, ref)
+        self._attr_device_info = device_info(initial_device)
 
     @property
     def device(self) -> dict:
@@ -26,21 +25,7 @@ class HomeSeerEntityBase:
 
     @property
     def available(self) -> bool:
-        data = self.hass.data.get(DOMAIN, {}).get(self.entry.entry_id) if getattr(self, "hass", None) else None
-        if data is not None and not bridge_available(data):
-            return False
         return bool(self.device)
-
-    @property
-    def extra_state_attributes(self):
-        device = self.device or {}
-        return {
-            "homeseer_ref": self.ref,
-            "homeseer_location": device.get("location"),
-            "homeseer_location2": device.get("location2"),
-            "homeseer_interface": device.get("interface") or device.get("interface_name"),
-            "homeseer_device_type": device.get("device_type") or device.get("device_type_string"),
-        }
 
     async def async_added_to_hass(self):
         signal = f"{SIGNAL_STATE_UPDATED}_{self.entry.entry_id}_{self.ref}"

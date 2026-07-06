@@ -94,52 +94,13 @@ def full_name(device: dict) -> str:
     parts = [device.get("location2"), device.get("location"), device.get("name")]
     return " ".join(str(p).strip() for p in parts if p)
 
-
-def _clean_registry_value(value):
-    if value is None:
-        return None
-    value = str(value).strip()
-    return value or None
-
-def bridge_device_info() -> dict:
+def device_info(device: dict) -> dict:
     return {
-        "identifiers": {(DOMAIN, "bridge")},
-        "name": "HomeSeer Bridge",
-        "manufacturer": "HomeSeer",
-        "model": "HS4 Bridge",
-    }
-
-def device_info(device: dict, ref=None) -> dict:
-    hs_ref = device.get("ref") or device.get("Ref") or ref
-    parts = [
-        _clean_registry_value(device.get("interface") or device.get("interface_name")),
-        _clean_registry_value(
-            device.get("device_type_string")
-            or device.get("device_type")
-            or device.get("Device_Type_Description")
-            or device.get("device_type_description")
-        ),
-    ]
-    parts = [part for part in parts if part and part.lower() != "unknown"]
-    model = " / ".join(parts) if parts else "HS4 Device"
-
-    info = {
-        "identifiers": {(DOMAIN, str(hs_ref))},
+        "identifiers": {(DOMAIN, str(device["ref"]))},
         "name": full_name(device),
         "manufacturer": "HomeSeer",
-        "model": model,
-        "via_device": (DOMAIN, "bridge"),
+        "model": f"{device.get('device_type') or 'HS4 Device'}{' via ' + device.get('interface') if device.get('interface') else ''}",
     }
-
-    suggested_area = _clean_registry_value(device.get("location2")) or _clean_registry_value(device.get("location"))
-    if suggested_area:
-        info["suggested_area"] = suggested_area
-
-    sw_version = _clean_registry_value(device.get("version") or device.get("firmware") or device.get("firmware_version"))
-    if sw_version:
-        info["sw_version"] = sw_version
-
-    return info
 
 def text_blob(device: dict) -> str:
     return " ".join([

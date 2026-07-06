@@ -8,31 +8,22 @@ from .helpers import is_binary_sensor, is_excluded, binary_device_class
 from .bridge_stats import ensure_stats, health_score
 
 
-
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     state = data["state"]
 
-    refs = [
-        ref
+    entities = [
+        HomeSeerBinarySensor(entry, ref, device)
         for ref, device in state.items()
         if is_binary_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ]
 
-    entities = [
-        HomeSeerBinarySensor(entry, ref, device)
-        for ref in refs
-        for device in [state[ref]]
-    ]
+    entities.extend(
+        HomeSeerBridgeMonitorBinarySensor(entry, key, name)
+        for key, name in MONITOR_BINARY_SENSORS
+    )
 
-entities.extend(
-    HomeSeerBridgeMonitorBinarySensor(entry, key, name)
-    for key, name in MONITOR_BINARY_SENSORS
-)
-
-data.setdefault("entity_adders", {})["binary_sensor"] = async_add_entities
-data.setdefault("known_entity_refs", {}).setdefault("binary_sensor", set()).update(refs)
-async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):

@@ -13,31 +13,22 @@ from .helpers import (
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
 
 
-
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     state = data["state"]
 
-    refs = [
-        ref
+    entities = [
+        HomeSeerSensor(entry, ref, device)
         for ref, device in state.items()
         if is_plain_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ]
 
-    entities = [
-        HomeSeerSensor(entry, ref, device)
-        for ref in refs
-        for device in [state[ref]]
-    ]
+    entities.extend(
+        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+        for key, name, unit in MONITOR_SENSORS
+    )
 
-entities.extend(
-    HomeSeerBridgeMonitorSensor(entry, key, name, unit)
-    for key, name, unit in MONITOR_SENSORS
-)
-
-data.setdefault("entity_adders", {})["sensor"] = async_add_entities
-data.setdefault("known_entity_refs", {}).setdefault("sensor", set()).update(refs)
-async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):

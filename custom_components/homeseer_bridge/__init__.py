@@ -30,7 +30,6 @@ from .const import (
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
 from .dashboard import async_ensure_dashboard
-from .discovery import async_add_new_entities_for_refs
 from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,13 +113,13 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     data["stats"]["last_new_devices"] = len(new_refs)
     data["stats"]["total_new_devices_seen"] = data["stats"].get("total_new_devices_seen", 0) + len(new_refs)
 
-
-    if new_refs:
-        created = await async_add_new_entities_for_refs(hass, entry, new_refs)
-        data["stats"]["last_new_entities_created"] = sum(created.values())
-        data["stats"]["total_new_entities_created"] = data["stats"].get("total_new_entities_created", 0) + sum(created.values())
-        if not created:
-            _LOGGER.debug("HomeSeer Bridge found new refs but no matching entities were created: %s", new_refs)
+    if new_refs and not data.get("reload_scheduled"):
+        data["reload_scheduled"] = True
+        _LOGGER.info(
+            "HomeSeer Bridge discovered %s new HomeSeer devices; scheduling integration reload so new entities are created",
+            len(new_refs),
+        )
+        hass.async_create_task(_async_reload_for_new_devices(hass, entry))
 
     for ref in changed_refs:
         hass.loop.call_soon_threadsafe(
@@ -220,8 +219,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "last_virtual_poll_changed": 0,
             "last_new_devices": 0,
             "total_new_devices_seen": 0,
-            "last_new_entities_created": 0,
-            "total_new_entities_created": 0,
         },
     }
 
@@ -391,7 +388,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.2.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.0.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

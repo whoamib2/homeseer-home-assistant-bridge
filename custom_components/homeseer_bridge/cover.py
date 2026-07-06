@@ -9,27 +9,13 @@ from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_cover, is_excluded
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    data = hass.data[DOMAIN][entry.entry_id]
-    state = data["state"]
-
-    refs = [
-        ref
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+    state = hass.data[DOMAIN][entry.entry_id]["state"]
+    async_add_entities([
+        HomeSeerCover(entry, ref, device)
         for ref, device in state.items()
         if is_cover(device) and not is_excluded(device, entry) and not device.get("hide")
-    ]
-
-    entities = [
-        HomeSeerCover(entry, ref, device)
-        for ref in refs
-        for device in [state[ref]]
-    ]
-
-data.setdefault("entity_adders", {})["cover"] = async_add_entities
-data.setdefault("known_entity_refs", {}).setdefault("cover", set()).update(refs)
-async_add_entities(entities)
-
+    ])
 
 class HomeSeerCover(HomeSeerEntityBase, CoverEntity):
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
