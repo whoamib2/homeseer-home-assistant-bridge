@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.3.0
+
+- Adds safe dynamic entity discovery for newly added HomeSeer devices.
+- Platforms now listen for new HomeSeer refs and create matching entities without a full integration reload.
+- Avoids circular imports by keeping entity creation inside each platform module.
+- Adds counters for newly discovered refs and dynamically created entities.
+- Keeps the stable device matching improvements from v2.2.1.
+
+
 ## v2.2.1
 
 - Safe device registry matching update based on the stable v2.0.1 build.

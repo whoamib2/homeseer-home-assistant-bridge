@@ -1,1 +1,1 @@
-Bridge HomeSeer HS4 devices into Home Assistant using mcsMQTT for state and the HomeSeer JSON API for control. Version 2.2.1 safely improves Home Assistant device registry matching from the stable v2.0.1 base.
+Bridge HomeSeer HS4 devices into Home Assistant using mcsMQTT for state and the HomeSeer JSON API for control. Version 2.3.0 adds safe dynamic discovery for new HomeSeer devices.

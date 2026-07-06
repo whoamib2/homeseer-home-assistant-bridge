@@ -19,6 +19,7 @@ from .const import (
     PLATFORMS,
     CONF_HS_URL,
     SIGNAL_STATE_UPDATED,
+    SIGNAL_NEW_DEVICES,
     CONF_ENABLE_DEBUG_LOGGING,
     DEFAULT_ENABLE_DEBUG_LOGGING,
     CONF_REFRESH_INTERVAL_SECONDS,
@@ -113,13 +114,12 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     data["stats"]["last_new_devices"] = len(new_refs)
     data["stats"]["total_new_devices_seen"] = data["stats"].get("total_new_devices_seen", 0) + len(new_refs)
 
-    if new_refs and not data.get("reload_scheduled"):
-        data["reload_scheduled"] = True
-        _LOGGER.info(
-            "HomeSeer Bridge discovered %s new HomeSeer devices; scheduling integration reload so new entities are created",
-            len(new_refs),
-        )
-        hass.async_create_task(_async_reload_for_new_devices(hass, entry))
+
+    if new_refs:
+        data["stats"]["last_new_devices"] = len(new_refs)
+        data["stats"]["total_new_devices_seen"] = data["stats"].get("total_new_devices_seen", 0) + len(new_refs)
+        _LOGGER.info("HomeSeer Bridge discovered %s new refs; notifying platforms for dynamic entity creation", len(new_refs))
+        async_dispatcher_send(hass, f"{SIGNAL_NEW_DEVICES}_{entry.entry_id}", new_refs)
 
     for ref in changed_refs:
         hass.loop.call_soon_threadsafe(
@@ -219,6 +219,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "last_virtual_poll_changed": 0,
             "last_new_devices": 0,
             "total_new_devices_seen": 0,
+            "last_new_entities_created": 0,
+            "total_new_entities_created": 0,
         },
     }
 
@@ -388,7 +390,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.0.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.3.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
