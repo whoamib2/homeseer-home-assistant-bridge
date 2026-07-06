@@ -9,13 +9,27 @@ from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_dimmer, is_excluded, on_value, off_value
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    state = hass.data[DOMAIN][entry.entry_id]["state"]
-    async_add_entities([
-        HomeSeerLight(entry, ref, device)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    data = hass.data[DOMAIN][entry.entry_id]
+    state = data["state"]
+
+    refs = [
+        ref
         for ref, device in state.items()
         if is_dimmer(device) and not is_excluded(device, entry) and not device.get("hide")
-    ])
+    ]
+
+    entities = [
+        HomeSeerLight(entry, ref, device)
+        for ref in refs
+        for device in [state[ref]]
+    ]
+
+data.setdefault("entity_adders", {})["light"] = async_add_entities
+data.setdefault("known_entity_refs", {}).setdefault("light", set()).update(refs)
+async_add_entities(entities)
+
 
 class HomeSeerLight(HomeSeerEntityBase, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}

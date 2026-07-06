@@ -4,7 +4,6 @@ from homeassistant.components.sensor import SensorEntity
 
 from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
-from .helpers import bridge_device_info
 from .helpers import (
     is_plain_sensor,
     is_excluded,
@@ -14,22 +13,31 @@ from .helpers import (
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
 
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     state = data["state"]
 
-    entities = [
-        HomeSeerSensor(entry, ref, device)
+    refs = [
+        ref
         for ref, device in state.items()
         if is_plain_sensor(device) and not is_excluded(device, entry) and not device.get("hide")
     ]
 
-    entities.extend(
-        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
-        for key, name, unit in MONITOR_SENSORS
-    )
+    entities = [
+        HomeSeerSensor(entry, ref, device)
+        for ref in refs
+        for device in [state[ref]]
+    ]
 
-    async_add_entities(entities)
+entities.extend(
+    HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+    for key, name, unit in MONITOR_SENSORS
+)
+
+data.setdefault("entity_adders", {})["sensor"] = async_add_entities
+data.setdefault("known_entity_refs", {}).setdefault("sensor", set()).update(refs)
+async_add_entities(entities)
 
 
 class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
@@ -79,11 +87,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"homeseer_bridge_monitor_{key}"
         self._attr_native_unit_of_measurement = unit
-
-
-@property
-def device_info(self):
-    return bridge_device_info()
 
     @property
     def available(self):

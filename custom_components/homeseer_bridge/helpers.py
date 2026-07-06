@@ -94,13 +94,52 @@ def full_name(device: dict) -> str:
     parts = [device.get("location2"), device.get("location"), device.get("name")]
     return " ".join(str(p).strip() for p in parts if p)
 
-def device_info(device: dict) -> dict:
+
+def _clean_registry_value(value):
+    if value is None:
+        return None
+    value = str(value).strip()
+    return value or None
+
+def bridge_device_info() -> dict:
     return {
-        "identifiers": {(DOMAIN, str(device["ref"]))},
+        "identifiers": {(DOMAIN, "bridge")},
+        "name": "HomeSeer Bridge",
+        "manufacturer": "HomeSeer",
+        "model": "HS4 Bridge",
+    }
+
+def device_info(device: dict, ref=None) -> dict:
+    hs_ref = device.get("ref") or device.get("Ref") or ref
+    parts = [
+        _clean_registry_value(device.get("interface") or device.get("interface_name")),
+        _clean_registry_value(
+            device.get("device_type_string")
+            or device.get("device_type")
+            or device.get("Device_Type_Description")
+            or device.get("device_type_description")
+        ),
+    ]
+    parts = [part for part in parts if part and part.lower() != "unknown"]
+    model = " / ".join(parts) if parts else "HS4 Device"
+
+    info = {
+        "identifiers": {(DOMAIN, str(hs_ref))},
         "name": full_name(device),
         "manufacturer": "HomeSeer",
-        "model": f"{device.get('device_type') or 'HS4 Device'}{' via ' + device.get('interface') if device.get('interface') else ''}",
+        "model": model,
+        "via_device": (DOMAIN, "bridge"),
     }
+
+    suggested_area = _clean_registry_value(device.get("location2")) or _clean_registry_value(device.get("location"))
+    if suggested_area:
+        info["suggested_area"] = suggested_area
+
+    sw_version = _clean_registry_value(device.get("version") or device.get("firmware") or device.get("firmware_version"))
+    if sw_version:
+        info["sw_version"] = sw_version
+
+    return info
 
 def text_blob(device: dict) -> str:
     return " ".join([
@@ -299,73 +338,3 @@ def on_value(device: dict):
 
 def off_value(device: dict):
     return 0
-
-
-
-# ---- Home Assistant device registry helpers ----
-
-def homeseer_ref(device: dict, fallback_ref=None):
-    return device.get("ref") or device.get("Ref") or device.get("id") or device.get("ID") or fallback_ref
-
-
-def _clean_device_registry_value(value):
-    if value is None:
-        return None
-    value = str(value).strip()
-    return value or None
-
-
-def _homeseer_device_model(device: dict) -> str:
-    parts = [
-        _clean_device_registry_value(device.get("interface") or device.get("interface_name")),
-        _clean_device_registry_value(
-            device.get("device_type_string")
-            or device.get("device_type")
-            or device.get("Device_Type_Description")
-            or device.get("device_type_description")
-        ),
-    ]
-    parts = [part for part in parts if part and part.lower() != "unknown"]
-    return " / ".join(parts) if parts else "HS4 Device"
-
-
-def _homeseer_suggested_area(device: dict):
-    return (
-        _clean_device_registry_value(device.get("location2"))
-        or _clean_device_registry_value(device.get("location"))
-    )
-
-
-def bridge_device_info():
-    return {
-        "identifiers": {("homeseer_bridge", "bridge")},
-        "name": "HomeSeer Bridge",
-        "manufacturer": "HomeSeer",
-        "model": "HS4 Bridge",
-    }
-
-
-def improved_device_info(device: dict, ref=None):
-    hs_ref = homeseer_ref(device, ref)
-    info = {
-        "identifiers": {("homeseer_bridge", str(hs_ref))},
-        "name": full_name(device),
-        "manufacturer": "HomeSeer",
-        "model": _homeseer_device_model(device),
-        "via_device": ("homeseer_bridge", "bridge"),
-    }
-
-    suggested_area = _homeseer_suggested_area(device)
-    if suggested_area:
-        info["suggested_area"] = suggested_area
-
-    sw_version = _clean_device_registry_value(
-        device.get("version") or device.get("firmware") or device.get("firmware_version")
-    )
-    if sw_version:
-        info["sw_version"] = sw_version
-
-    return info
-
-# Override older device_info implementation with richer registry metadata.
-device_info = improved_device_info

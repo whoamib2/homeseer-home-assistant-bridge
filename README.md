@@ -1,12 +1,12 @@
 # HomeSeer Home Assistant Bridge
 
-## v2.1.0
+## v2.2.0
 
-- Improves Home Assistant device registry matching for HomeSeer devices.
-- Uses the HomeSeer ref as a stable device identifier so entities from the same HomeSeer device group more consistently.
-- Adds manufacturer, model, suggested area, and hub linkage metadata.
-- Links HomeSeer devices back to the HomeSeer Bridge hub with `via_device`.
-- Adds HomeSeer ref, location, interface, and device type attributes for easier troubleshooting.
+- Adds dynamic entity discovery for newly added HomeSeer devices without a full integration reload.
+- Stores platform entity adders and creates matching entities when new HomeSeer refs appear during API refresh.
+- Keeps the refresh-based discovery counters and adds entity-created counters.
+- Improves device registry matching with stable HomeSeer ref identifiers, model metadata, suggested area, and bridge hub linkage.
+- Adds HomeSeer ref/location/interface/type attributes for easier troubleshooting.
 
 
 ## v2.0.1

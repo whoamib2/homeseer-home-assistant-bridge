@@ -9,13 +9,27 @@ from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_lock, is_excluded
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
-    state = hass.data[DOMAIN][entry.entry_id]["state"]
-    async_add_entities([
-        HomeSeerLock(entry, ref, device)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    data = hass.data[DOMAIN][entry.entry_id]
+    state = data["state"]
+
+    refs = [
+        ref
         for ref, device in state.items()
         if is_lock(device) and not is_excluded(device, entry) and not device.get("hide")
-    ])
+    ]
+
+    entities = [
+        HomeSeerLock(entry, ref, device)
+        for ref in refs
+        for device in [state[ref]]
+    ]
+
+data.setdefault("entity_adders", {})["lock"] = async_add_entities
+data.setdefault("known_entity_refs", {}).setdefault("lock", set()).update(refs)
+async_add_entities(entities)
+
 
 class HomeSeerLock(HomeSeerEntityBase, LockEntity):
     def unique_id_for_ref(self, ref: int) -> str:
