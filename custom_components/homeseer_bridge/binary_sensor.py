@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
-from .helpers import is_binary_sensor, is_excluded, binary_device_class
+from .helpers import bridge_device_info, is_binary_sensor, is_excluded, binary_device_class
 from .bridge_stats import ensure_stats, health_score
 
 
@@ -68,6 +68,11 @@ class HomeSeerBridgeMonitorBinarySensor(BinarySensorEntity):
         self.key = key
         self._attr_name = name
         self._attr_unique_id = f"homeseer_bridge_monitor_{key}"
+
+
+@property
+def device_info(self):
+    return bridge_device_info()
 
     @property
     def available(self):

@@ -5,6 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from .const import DOMAIN
 from .entity_base import HomeSeerEntityBase
 from .helpers import (
+    bridge_device_info,
     is_plain_sensor,
     is_excluded,
     sensor_device_class,
@@ -78,6 +79,11 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"homeseer_bridge_monitor_{key}"
         self._attr_native_unit_of_measurement = unit
+
+
+@property
+def device_info(self):
+    return bridge_device_info()
 
     @property
     def available(self):

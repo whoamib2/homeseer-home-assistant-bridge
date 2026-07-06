@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.2.1
+
+- Safe device registry matching update based on the stable v2.0.1 build.
+- Uses HomeSeer refs as stable Home Assistant device registry identifiers.
+- Adds manufacturer, model, suggested area, and bridge hub linkage metadata.
+- Adds HomeSeer ref/location/interface/device type attributes for troubleshooting.
+- Avoids the dynamic-discovery circular import issue from v2.2.0.
+
+
 ## v2.0.1
 
 - Updates the HomeSeer Bridge dashboard to use Home Assistant's modern Sections layout.

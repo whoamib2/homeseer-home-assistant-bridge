@@ -15,7 +15,7 @@ class HomeSeerEntityBase:
         self._initial_device = initial_device
         self._attr_name = full_name(initial_device)
         self._attr_unique_id = self.unique_id_for_ref(ref)
-        self._attr_device_info = device_info(initial_device)
+        self._attr_device_info = device_info(initial_device, ref)
 
     @property
     def device(self) -> dict:
@@ -26,6 +26,18 @@ class HomeSeerEntityBase:
     @property
     def available(self) -> bool:
         return bool(self.device)
+
+
+@property
+def extra_state_attributes(self):
+    device = self.device or {}
+    return {
+        "homeseer_ref": self.ref,
+        "homeseer_location": device.get("location"),
+        "homeseer_location2": device.get("location2"),
+        "homeseer_interface": device.get("interface") or device.get("interface_name"),
+        "homeseer_device_type": device.get("device_type") or device.get("device_type_string"),
+    }
 
     async def async_added_to_hass(self):
         signal = f"{SIGNAL_STATE_UPDATED}_{self.entry.entry_id}_{self.ref}"
