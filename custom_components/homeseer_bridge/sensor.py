@@ -108,9 +108,9 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit
 
 
-@property
-def device_info(self):
-    return bridge_device_info()
+    @property
+    def device_info(self):
+        return bridge_device_info()
 
     @property
     def available(self):

@@ -97,9 +97,9 @@ class HomeSeerBridgeMonitorBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"homeseer_bridge_monitor_{key}"
 
 
-@property
-def device_info(self):
-    return bridge_device_info()
+    @property
+    def device_info(self):
+        return bridge_device_info()
 
     @property
     def available(self):
