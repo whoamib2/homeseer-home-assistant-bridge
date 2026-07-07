@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.5.0
+
+- Adds Live Device Intelligence monitor sensors.
+- Adds dashboard sections for devices on/off/unknown, lights, switches, covers, locks, fans, climate, low battery devices, and throughput rates.
+- Adds MQTT updates/minute, API refreshes/hour, virtual polls/minute, and bridge uptime sensors.
+- Adds live device statistics to diagnostics.
+- Keeps the v2.4.1 monitor fix, v2.4 metadata sync, v2.3 dynamic discovery, and v2.2 safe device matching.
+
+
 ## v2.4.0
 
 - Adds automatic metadata sync for existing HomeSeer entities.

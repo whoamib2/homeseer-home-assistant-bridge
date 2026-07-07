@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available, live_device_stats
 
 REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
 
@@ -78,6 +78,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "version": entry.version,
             "minor_version": entry.minor_version,
         },
+        "live_device_stats": live_device_stats(data),
         "summary": {
             "health_score": health_score(data),
             "bridge_available": bridge_available(data),

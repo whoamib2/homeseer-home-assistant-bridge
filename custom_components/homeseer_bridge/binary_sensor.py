@@ -32,7 +32,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = build_entities(list(state.keys()))
 
     entities.extend(
-    HomeSeerBridgeMonitorBinarySensor(entry, key, name)
+        HomeSeerBridgeMonitorBinarySensor(entry, key, name)
         for key, name in MONITOR_BINARY_SENSORS
     )
     async_add_entities(entities)
@@ -97,9 +97,9 @@ class HomeSeerBridgeMonitorBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"homeseer_bridge_monitor_{key}"
 
 
-    @property
-    def device_info(self):
-        return bridge_device_info()
+@property
+def device_info(self):
+    return bridge_device_info()
 
     @property
     def available(self):

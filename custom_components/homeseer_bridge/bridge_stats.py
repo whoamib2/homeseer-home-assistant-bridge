@@ -92,3 +92,130 @@ def health_score(data: dict) -> int:
 def bridge_available(data: dict) -> bool:
     stats = ensure_stats(data)
     return bool(stats.get("last_api_ok", True)) and health_score(data) >= 50
+def _device_text(device: dict) -> str:
+    return " ".join(
+        str(device.get(key) or "")
+        for key in (
+            "name",
+            "location",
+            "location2",
+            "status",
+            "device_type",
+            "device_type_string",
+            "Device_Type_Description",
+            "device_type_description",
+            "interface",
+            "interface_name",
+            "labels_blob",
+            "raw_text",
+        )
+    ).lower()
+
+
+def _numeric_value(device: dict):
+    value = device.get("numeric_value", device.get("value"))
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _status(device: dict) -> str:
+    return str(device.get("status") or "").strip().lower()
+
+
+def _is_on_like(device: dict) -> bool:
+    value = _numeric_value(device)
+    if value is not None:
+        return value > 0
+    return _status(device) in {"on", "open", "unlocked", "active", "motion", "detected", "wet", "true", "yes"}
+
+
+def _is_off_like(device: dict) -> bool:
+    value = _numeric_value(device)
+    if value is not None:
+        return value == 0
+    return _status(device) in {"off", "closed", "locked", "idle", "clear", "dry", "false", "no"}
+
+
+def live_device_stats(data: dict) -> dict:
+    """Return dashboard-friendly live statistics from the current HomeSeer state."""
+    state = data.get("state") or {}
+    stats = ensure_stats(data)
+    refresh_derived_stats(stats)
+
+    result = {
+        "devices_on": 0,
+        "devices_off": 0,
+        "devices_unknown": 0,
+        "lights_on": 0,
+        "lights_off": 0,
+        "switches_on": 0,
+        "switches_off": 0,
+        "binary_sensors_on": 0,
+        "binary_sensors_off": 0,
+        "covers_open": 0,
+        "covers_closed": 0,
+        "locks_unlocked": 0,
+        "locks_locked": 0,
+        "fans_on": 0,
+        "fans_off": 0,
+        "climate_active": 0,
+        "low_battery_devices": 0,
+        "mqtt_updates_per_min": 0,
+        "api_refreshes_per_hour": 0,
+        "virtual_polls_per_min": 0,
+        "uptime_seconds": 0,
+    }
+
+    for device in state.values():
+        text = _device_text(device)
+        status = _status(device)
+        value = _numeric_value(device)
+        is_on = _is_on_like(device)
+        is_off = _is_off_like(device)
+
+        if is_on:
+            result["devices_on"] += 1
+        elif is_off:
+            result["devices_off"] += 1
+        else:
+            result["devices_unknown"] += 1
+
+        is_light = "light" in text or "dimmer" in text or "lamp" in text
+        is_switch = "switch" in text or "virtual" in text
+        is_binary = any(word in text for word in ("motion", "contact", "leak", "water sensor", "door sensor", "window sensor", "tamper", "smoke", "co sensor"))
+        is_cover = "garage door" in text or "barrier" in text or "cover" in text
+        is_lock = "lock" in text
+        is_fan = "fan" in text
+        is_climate = any(word in text for word in ("thermostat", "climate", "heat", "cooling", "heating"))
+
+        if is_light:
+            result["lights_on" if is_on else "lights_off"] += 1
+        if is_switch:
+            result["switches_on" if is_on else "switches_off"] += 1
+        if is_binary:
+            result["binary_sensors_on" if is_on else "binary_sensors_off"] += 1
+        if is_cover:
+            result["covers_open" if ("open" in status or is_on) else "covers_closed"] += 1
+        if is_lock:
+            result["locks_unlocked" if ("unlock" in status or (value == 0 if value is not None else False)) else "locks_locked"] += 1
+        if is_fan:
+            result["fans_on" if is_on else "fans_off"] += 1
+        if is_climate and any(word in status for word in ("heat", "cool", "heating", "cooling", "active")):
+            result["climate_active"] += 1
+
+        if "battery" in text and value is not None and value <= 20:
+            result["low_battery_devices"] += 1
+
+    started = stats.get("integration_started_timestamp")
+    now = time()
+    if started:
+        uptime = max(0, now - float(started))
+        result["uptime_seconds"] = round(uptime)
+        if uptime > 0:
+            result["mqtt_updates_per_min"] = round((stats.get("mqtt_updates", 0) / uptime) * 60, 2)
+            result["api_refreshes_per_hour"] = round((stats.get("api_refreshes", 0) / uptime) * 3600, 2)
+            result["virtual_polls_per_min"] = round((stats.get("virtual_polls", 0) / uptime) * 60, 2)
+
+    return result

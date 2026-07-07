@@ -13,7 +13,7 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -38,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = build_entities(list(state.keys()))
 
     entities.extend(
-    HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
         for key, name, unit in MONITOR_SENSORS
     )
     async_add_entities(entities)
@@ -94,6 +94,23 @@ MONITOR_SENSORS = [
     ("total_new_devices_seen", "HomeSeer Bridge New Devices Seen", None),
     ("unmatched_topics", "HomeSeer Bridge Unmatched Topics", None),
     ("health_score", "HomeSeer Bridge Health Score", "%"),
+    ("devices_on", "HomeSeer Bridge Devices On", None),
+    ("devices_off", "HomeSeer Bridge Devices Off", None),
+    ("devices_unknown", "HomeSeer Bridge Devices Unknown", None),
+    ("lights_on", "HomeSeer Bridge Lights On", None),
+    ("lights_off", "HomeSeer Bridge Lights Off", None),
+    ("switches_on", "HomeSeer Bridge Switches On", None),
+    ("switches_off", "HomeSeer Bridge Switches Off", None),
+    ("binary_sensors_on", "HomeSeer Bridge Binary Sensors On", None),
+    ("covers_open", "HomeSeer Bridge Covers Open", None),
+    ("locks_unlocked", "HomeSeer Bridge Locks Unlocked", None),
+    ("fans_on", "HomeSeer Bridge Fans On", None),
+    ("climate_active", "HomeSeer Bridge Climate Active", None),
+    ("low_battery_devices", "HomeSeer Bridge Low Battery Devices", None),
+    ("mqtt_updates_per_min", "HomeSeer Bridge MQTT Updates Per Minute", None),
+    ("api_refreshes_per_hour", "HomeSeer Bridge API Refreshes Per Hour", None),
+    ("virtual_polls_per_min", "HomeSeer Bridge Virtual Polls Per Minute", None),
+    ("uptime_seconds", "HomeSeer Bridge Uptime", 's'),
 ]
 
 
@@ -108,9 +125,9 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit
 
 
-    @property
-    def device_info(self):
-        return bridge_device_info()
+@property
+def device_info(self):
+    return bridge_device_info()
 
     @property
     def available(self):
@@ -131,6 +148,10 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             return len(data.get("unmatched_topics") or {})
         if self.key == "health_score":
             return health_score(data)
+
+        live = live_device_stats(data)
+        if self.key in live:
+            return live[self.key]
 
         return stats.get(self.key)
 
