@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.4.0
+
+- Adds automatic metadata sync for existing HomeSeer entities.
+- Entity names and device registry metadata refresh when HomeSeer device name, location, interface, or type changes.
+- Adds additional change detection for `device_type_string` and `interface_name`.
+- Adds metadata update counters to diagnostics.
+- Keeps dynamic discovery from v2.3.0 and safe device matching from v2.2.1.
+
+
 ## v2.3.0
 
 - Adds safe dynamic entity discovery for newly added HomeSeer devices.

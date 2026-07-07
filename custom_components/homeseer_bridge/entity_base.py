@@ -17,6 +17,13 @@ class HomeSeerEntityBase:
         self._attr_unique_id = self.unique_id_for_ref(ref)
         self._attr_device_info = device_info(initial_device, ref)
 
+
+def _sync_registry_metadata_from_device(self) -> None:
+    """Refresh name and device registry metadata from the latest HomeSeer data."""
+    device = self.device or self._initial_device
+    self._attr_name = full_name(device)
+    self._attr_device_info = device_info(device, self.ref)
+
     @property
     def device(self) -> dict:
         if getattr(self, "hass", None) is None:
@@ -40,11 +47,13 @@ def extra_state_attributes(self):
     }
 
     async def async_added_to_hass(self):
+        self._sync_registry_metadata_from_device()
         signal = f"{SIGNAL_STATE_UPDATED}_{self.entry.entry_id}_{self.ref}"
 
         def _handle_update():
             # MQTT/dispatcher callbacks may be invoked outside the event loop.
             # Home Assistant requires async_write_ha_state to run on the loop.
+            self._sync_registry_metadata_from_device()
             self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, _handle_update))

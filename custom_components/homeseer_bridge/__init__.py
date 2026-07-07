@@ -52,7 +52,9 @@ def _device_changed(old: dict | None, new: dict) -> bool:
         or old.get("location") != new.get("location")
         or old.get("location2") != new.get("location2")
         or old.get("device_type") != new.get("device_type")
+        or old.get("device_type_string") != new.get("device_type_string")
         or old.get("interface") != new.get("interface")
+        or old.get("interface_name") != new.get("interface_name")
     )
 
 
@@ -107,6 +109,7 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
     data["virtual_refs"] = {ref for ref, device in current_state.items() if _is_virtual_device(device)}
     data["stats"]["api_refreshes"] += 1
     data["stats"]["last_refresh_changed"] = len(changed_refs)
+    data["stats"]["metadata_updates"] = data["stats"].get("metadata_updates", 0) + len(changed_refs)
     data["stats"]["last_refresh_devices"] = len(fresh_state)
     data["stats"]["last_api_ok"] = True
     data["stats"]["consecutive_api_failures"] = 0
@@ -221,6 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "total_new_devices_seen": 0,
             "last_new_entities_created": 0,
             "total_new_entities_created": 0,
+            "metadata_updates": 0,
         },
     }
 
@@ -390,7 +394,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.3.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.4.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

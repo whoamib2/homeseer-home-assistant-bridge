@@ -104,6 +104,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "total_new_devices_seen": stats.get("total_new_devices_seen"),
             "last_new_entities_created": stats.get("last_new_entities_created"),
             "total_new_entities_created": stats.get("total_new_entities_created"),
+            "metadata_updates": stats.get("metadata_updates"),
             "api_latency_ms": stats.get("api_latency_ms"),
             "virtual_poll_latency_ms": stats.get("virtual_poll_latency_ms"),
             "last_mqtt_age_seconds": stats.get("last_mqtt_age_seconds"),
