@@ -217,3 +217,33 @@
 
         Matching activity is hidden from the Live Event Viewer but still leaves a
         filtered count for troubleshooting.
+
+# ---- homeseer_bridge_device_explorer_prep_sections.yaml ----
+# Optional v3.4.0 Device Explorer Prep section.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Device Explorer Prep
+    - type: entities
+      title: Activity Leaders
+      entities:
+        - entity: sensor.homeseer_bridge_explorer_tracked_refs
+          name: Refs With Visible Activity
+        - entity: sensor.homeseer_bridge_explorer_filtered_refs
+          name: Refs With Filtered Activity
+        - entity: sensor.homeseer_bridge_explorer_top_active_count
+          name: Busiest Visible Ref Count
+        - entity: sensor.homeseer_bridge_explorer_top_filtered_count
+          name: Noisiest Filtered Ref Count
+    - type: markdown
+      title: Explorer Details
+      content: >-
+        Open Developer Tools → States and select one of the Explorer sensors.
+
+        The `device_explorer` attribute includes:
+
+        - top active refs
+        - top filtered refs
+        - recently changed refs
+        - names, locations, status, category, and confidence

@@ -13,7 +13,7 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -118,6 +118,10 @@ MONITOR_SENSORS = [
     ("recent_activity", "HomeSeer Bridge Recent Activity", None),
     ("recent_activity_count", "HomeSeer Bridge Recent Activity Count", None),
     ("recent_activity_filtered_count", "HomeSeer Bridge Recent Activity Filtered Count", None),
+    ("device_explorer_tracked_refs", "HomeSeer Bridge Explorer Tracked Refs", None),
+    ("device_explorer_filtered_refs", "HomeSeer Bridge Explorer Filtered Refs", None),
+    ("device_explorer_top_active_count", "HomeSeer Bridge Explorer Top Active Count", None),
+    ("device_explorer_top_filtered_count", "HomeSeer Bridge Explorer Top Filtered Count", None),
     ("model_lights", "HomeSeer Bridge Model Lights", None),
     ("model_switches", "HomeSeer Bridge Model Switches", None),
     ("model_sensors", "HomeSeer Bridge Model Sensors", None),
@@ -207,6 +211,18 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "area_apply_last_skipped":
             return stats.get("last_area_apply_skipped", 0)
 
+        explorer = device_explorer_stats(data)
+        if self.key == "device_explorer_tracked_refs":
+            return explorer.get("tracked_refs", 0)
+        if self.key == "device_explorer_filtered_refs":
+            return explorer.get("filtered_tracked_refs", 0)
+        if self.key == "device_explorer_top_active_count":
+            top = explorer.get("top_active_refs") or []
+            return top[0].get("count", 0) if top else 0
+        if self.key == "device_explorer_top_filtered_count":
+            top = explorer.get("top_filtered_refs") or []
+            return top[0].get("count", 0) if top else 0
+
         return stats.get(self.key)
 
     @property
@@ -236,4 +252,11 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             attrs["area_floor_summary"] = area_floor_stats(data)
         if self.key in {"area_apply_last_changed", "area_apply_last_skipped"}:
             attrs["last_area_apply"] = stats.get("last_area_apply")
+        if self.key in {
+            "device_explorer_tracked_refs",
+            "device_explorer_filtered_refs",
+            "device_explorer_top_active_count",
+            "device_explorer_top_filtered_count",
+        }:
+            attrs["device_explorer"] = device_explorer_stats(data)
         return attrs

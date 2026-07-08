@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.0
+
+- Adds Device Explorer Prep metrics and diagnostics for active, filtered, and recently changed refs.
+
+
 ## v3.3.0
 
 - Adds Recent Activity filtering with configurable comma-separated terms.

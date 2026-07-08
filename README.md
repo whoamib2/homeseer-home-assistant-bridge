@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.4.0
+
+- Adds Device Explorer Prep metrics.
+- Tracks per-ref visible activity counts.
+- Tracks per-ref filtered/noisy activity counts.
+- Adds top active refs, top filtered refs, and recently changed refs to sensor attributes and diagnostics.
+- Adds Device Explorer Prep dashboard YAML.
+
+
 ## v3.3.0
 
 - Adds Recent Activity filtering.
