@@ -1,5 +1,15 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.0.0
+
+- Adds the first Smart Device Model layer.
+- Classifies HomeSeer devices into light, switch, sensor, binary_sensor, lock, cover, fan, climate, and other categories.
+- Adds classification confidence, suggested area, virtual/battery flags, and category metadata to entity attributes.
+- Adds model category count sensors and average confidence sensor.
+- Adds smart model summary to diagnostics.
+- Adds optional Smart Device Model dashboard YAML.
+
+
 ## v2.7.1
 
 - Replaces the repository LICENSE file with standard MIT license text so GitHub/HACS can identify the SPDX license correctly.

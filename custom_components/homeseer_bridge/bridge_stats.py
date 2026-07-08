@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from time import monotonic, time
 
+from .device_model import summarize_models, category_count
+
 MAX_RECENT_ACTIVITY = 50
 
 
@@ -273,3 +275,5 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
     old_text = "" if old_value is None else str(old_value)
     new_text = "" if new_value is None else str(new_value)
     stats["last_activity"] = f"{event['name']}: {old_text} → {new_text}".strip()
+def smart_model_stats(data: dict) -> dict:
+    return summarize_models(data.get("state") or {})

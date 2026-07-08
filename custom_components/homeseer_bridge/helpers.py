@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from .topic_map import REF_TO_TOPICS
+from .device_model import classify_device
 
 from .const import (
     DOMAIN,
@@ -122,7 +123,8 @@ def device_info(device: dict, ref=None) -> dict:
         ),
     ]
     parts = [part for part in parts if part and part.lower() != "unknown"]
-    model = " / ".join(parts) if parts else "HS4 Device"
+    model_info = classify_device(device, hs_ref)
+    model = model_info.device_type or model_info.category or (" / ".join(parts) if parts else "HS4 Device")
 
     info = {
         "identifiers": {(DOMAIN, str(hs_ref))},

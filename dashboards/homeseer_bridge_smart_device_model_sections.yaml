@@ -1,0 +1,30 @@
+# Optional v3.0.0 Smart Device Model section.
+# Paste below your existing `sections:` list in a Home Assistant Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Smart Device Model
+    - type: entities
+      title: Classified Devices
+      entities:
+        - entity: sensor.homeseer_bridge_model_lights
+          name: Lights
+        - entity: sensor.homeseer_bridge_model_switches
+          name: Switches
+        - entity: sensor.homeseer_bridge_model_sensors
+          name: Sensors
+        - entity: sensor.homeseer_bridge_model_binary_sensors
+          name: Binary Sensors
+        - entity: sensor.homeseer_bridge_model_locks
+          name: Locks
+        - entity: sensor.homeseer_bridge_model_covers
+          name: Covers
+        - entity: sensor.homeseer_bridge_model_fans
+          name: Fans
+        - entity: sensor.homeseer_bridge_model_climate
+          name: Climate
+        - entity: sensor.homeseer_bridge_model_other
+          name: Other
+        - entity: sensor.homeseer_bridge_model_average_confidence
+          name: Average Confidence

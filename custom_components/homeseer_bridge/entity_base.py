@@ -5,6 +5,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN, SIGNAL_STATE_UPDATED
 from .bridge_stats import bridge_available
 from .helpers import device_info, full_name
+from .device_model import model_dict
 
 
 class HomeSeerEntityBase:
@@ -40,12 +41,18 @@ class HomeSeerEntityBase:
     @property
     def extra_state_attributes(self):
         device = self.device or {}
+        model = model_dict(device, self.ref)
         return {
             "homeseer_ref": self.ref,
             "homeseer_location": device.get("location"),
             "homeseer_location2": device.get("location2"),
             "homeseer_interface": device.get("interface") or device.get("interface_name"),
             "homeseer_device_type": device.get("device_type") or device.get("device_type_string"),
+            "homeseer_category": model.get("category"),
+            "homeseer_category_confidence": model.get("confidence"),
+            "homeseer_suggested_area": model.get("suggested_area"),
+            "homeseer_is_virtual": model.get("is_virtual"),
+            "homeseer_is_battery": model.get("is_battery"),
         }
 
     async def async_added_to_hass(self):

@@ -13,7 +13,7 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -117,6 +117,16 @@ MONITOR_SENSORS = [
     ("uptime_seconds", "HomeSeer Bridge Uptime", 's'),
     ("recent_activity", "HomeSeer Bridge Recent Activity", None),
     ("recent_activity_count", "HomeSeer Bridge Recent Activity Count", None),
+    ("model_lights", "HomeSeer Bridge Model Lights", None),
+    ("model_switches", "HomeSeer Bridge Model Switches", None),
+    ("model_sensors", "HomeSeer Bridge Model Sensors", None),
+    ("model_binary_sensors", "HomeSeer Bridge Model Binary Sensors", None),
+    ("model_locks", "HomeSeer Bridge Model Locks", None),
+    ("model_covers", "HomeSeer Bridge Model Covers", None),
+    ("model_fans", "HomeSeer Bridge Model Fans", None),
+    ("model_climate", "HomeSeer Bridge Model Climate", None),
+    ("model_other", "HomeSeer Bridge Model Other", None),
+    ("model_average_confidence", "HomeSeer Bridge Model Average Confidence", '%'),
 ]
 
 
@@ -161,6 +171,23 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key in live:
             return live[self.key]
 
+        model_stats = smart_model_stats(data)
+        model_map = {
+            "model_lights": "light",
+            "model_switches": "switch",
+            "model_sensors": "sensor",
+            "model_binary_sensors": "binary_sensor",
+            "model_locks": "lock",
+            "model_covers": "cover",
+            "model_fans": "fan",
+            "model_climate": "climate",
+            "model_other": "other",
+        }
+        if self.key in model_map:
+            return model_stats.get("categories", {}).get(model_map[self.key], 0)
+        if self.key == "model_average_confidence":
+            return model_stats.get("average_confidence")
+
         return stats.get(self.key)
 
     @property
@@ -176,4 +203,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         }
         if self.key == "recent_activity":
             attrs["events"] = stats.get("recent_activity") or []
+        if self.key == "model_average_confidence":
+            attrs["model_summary"] = smart_model_stats(data)
         return attrs

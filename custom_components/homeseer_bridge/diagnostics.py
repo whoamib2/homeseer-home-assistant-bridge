@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .device_model import summarize_models, model_dict
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available, live_device_stats
 
 REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
@@ -68,6 +69,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "interface": device.get("interface"),
             "interface_name": device.get("interface_name"),
             "is_virtual": ref in virtual_refs,
+            "smart_model": model_dict(device, ref),
         })
 
     return {
@@ -79,6 +81,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "minor_version": entry.minor_version,
         },
         "live_device_stats": live_device_stats(data),
+        "smart_device_model": summarize_models(state),
         "summary": {
             "health_score": health_score(data),
             "bridge_available": bridge_available(data),
