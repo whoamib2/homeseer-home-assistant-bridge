@@ -40,6 +40,13 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("activity_ref_counts", {})
     stats.setdefault("filtered_activity_ref_counts", {})
     stats.setdefault("last_activity_by_ref", {})
+    stats.setdefault("cached_repairs_report", None)
+    stats.setdefault("cached_repairs_report_timestamp", None)
+    stats.setdefault("repairs_total_candidates", 0)
+    stats.setdefault("repairs_critical_count", 0)
+    stats.setdefault("repairs_warning_count", 0)
+    stats.setdefault("repairs_info_count", 0)
+    stats.setdefault("repairs_health_score", None)
     stats.setdefault("last_activity", None)
     return stats
 

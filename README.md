@@ -1,5 +1,13 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.2
+
+- Built from v3.4.1 Activity Safety Fix.
+- Keeps capped/truncated recent activity payloads.
+- Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
+- Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
+
+
 ## v3.4.1
 
 - Activity Safety Fix built from stable v3.4.0.

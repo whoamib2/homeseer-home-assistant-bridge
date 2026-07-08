@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.5.2
+
+- Built from v3.4.1 Activity Safety Fix.
+- Adds cached Repairs Prep without sensor-time report recalculation.
+
+
 ## v3.4.1
 
 - Caps recent activity to 10 events.

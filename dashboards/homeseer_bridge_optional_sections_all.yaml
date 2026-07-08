@@ -247,3 +247,25 @@
         - top filtered refs
         - recently changed refs
         - names, locations, status, category, and confidence
+
+# ---- homeseer_bridge_repairs_prep_sections.yaml ----
+# Optional v3.5.2 Cached Repairs Prep section.
+# Built from v3.4.1 Activity Safety Fix.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Cached Repairs Prep
+    - type: entities
+      title: Repair Candidates
+      entities:
+        - entity: sensor.homeseer_bridge_repairs_health_score
+          name: Repairs Health Score
+        - entity: sensor.homeseer_bridge_repair_candidates
+          name: Total Candidates
+        - entity: sensor.homeseer_bridge_critical_repairs
+          name: Critical
+        - entity: sensor.homeseer_bridge_repair_warnings
+          name: Warnings
+        - entity: sensor.homeseer_bridge_repair_info
+          name: Info
