@@ -1,5 +1,11 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.2.1
+
+- Fixes v3.2.0 setup regression where `async_setup_entry` did not return a boolean because the new area apply service handler was inserted at the wrong indentation level.
+- No feature changes from v3.2.0.
+
+
 ## v3.2.0
 
 - Adds manual `homeseer_bridge.apply_suggested_areas` service.
