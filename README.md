@@ -1,5 +1,20 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.7.1
+
+- Replaces the repository LICENSE file with standard MIT license text so GitHub/HACS can identify the SPDX license correctly.
+- No integration runtime changes from v2.7.0.
+
+
+## v2.7.0
+
+- Adds optional Live Event Viewer dashboard YAML.
+- Shows the last 25 HomeSeer changes from the recent activity sensor attributes.
+- Adds an activity summary and 24-hour activity counter graph.
+- Adds a combined optional dashboard sections file for Live Intelligence, Recent Activity, and Live Event Viewer.
+- Keeps v2.6.0 recent activity tracking and v2.5.1 live intelligence.
+
+
 ## v2.6.0
 
 - Adds Recent Activity tracking for MQTT, API refresh, virtual poll, and manual control updates.

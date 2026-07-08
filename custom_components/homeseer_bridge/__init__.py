@@ -402,7 +402,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.6.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.7.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

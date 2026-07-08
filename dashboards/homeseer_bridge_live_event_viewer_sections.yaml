@@ -1,0 +1,45 @@
+# Optional v2.7.0 Live Event Viewer sections.
+# Paste below your existing `sections:` list in a Home Assistant Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Live Event Viewer
+
+    - type: markdown
+      title: Last 25 HomeSeer Changes
+      content: >-
+        {% set events = state_attr('sensor.homeseer_bridge_recent_activity', 'events') or [] %}
+        {% if events | count == 0 %}
+        No recent HomeSeer activity has been recorded yet.
+        {% else %}
+        {% for e in events[:25] %}
+        **{{ e.name }}**  
+        `{{ e.source | upper }}` · Ref `{{ e.ref }}` · {{ e.timestamp | timestamp_custom('%I:%M:%S %p', true) }}  
+        {{ e.old if e.old is not none else 'unknown' }} → **{{ e.new if e.new is not none else 'unknown' }}**
+
+        ---
+        {% endfor %}
+        {% endif %}
+
+    - type: entities
+      title: Activity Summary
+      entities:
+        - entity: sensor.homeseer_bridge_recent_activity
+          name: Latest Activity
+        - entity: sensor.homeseer_bridge_recent_activity_count
+          name: Events Recorded
+        - entity: sensor.homeseer_bridge_mqtt_updates
+          name: MQTT Updates
+        - entity: sensor.homeseer_bridge_api_refreshes
+          name: API Refreshes
+        - entity: sensor.homeseer_bridge_virtual_polls
+          name: Virtual Polls
+
+    - type: history-graph
+      title: Activity Counters
+      hours_to_show: 24
+      entities:
+        - sensor.homeseer_bridge_recent_activity_count
+        - sensor.homeseer_bridge_mqtt_updates
+        - sensor.homeseer_bridge_virtual_polls

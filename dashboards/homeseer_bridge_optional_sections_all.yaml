@@ -1,0 +1,131 @@
+# ---- homeseer_bridge_live_intelligence_sections.yaml ----
+# Optional v2.5.1 Live Device Intelligence sections.
+# Paste these below your existing `sections:` list in a Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Live HomeSeer Status
+    - type: entities
+      title: Overall State
+      entities:
+        - entity: sensor.homeseer_bridge_devices_on
+          name: Devices On
+        - entity: sensor.homeseer_bridge_devices_off
+          name: Devices Off
+        - entity: sensor.homeseer_bridge_devices_unknown
+          name: Unknown State
+        - entity: sensor.homeseer_bridge_low_battery_devices
+          name: Low Battery Devices
+    - type: entities
+      title: Lights and Switches
+      entities:
+        - entity: sensor.homeseer_bridge_lights_on
+          name: Lights On
+        - entity: sensor.homeseer_bridge_lights_off
+          name: Lights Off
+        - entity: sensor.homeseer_bridge_switches_on
+          name: Switches On
+        - entity: sensor.homeseer_bridge_switches_off
+          name: Switches Off
+    - type: entities
+      title: Doors, Locks, Fans, Climate
+      entities:
+        - entity: sensor.homeseer_bridge_binary_sensors_on
+          name: Binary Sensors On
+        - entity: sensor.homeseer_bridge_covers_open
+          name: Covers Open
+        - entity: sensor.homeseer_bridge_locks_unlocked
+          name: Locks Unlocked
+        - entity: sensor.homeseer_bridge_fans_on
+          name: Fans On
+        - entity: sensor.homeseer_bridge_climate_active
+          name: Climate Active
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Performance Rates
+    - type: entities
+      title: Throughput
+      entities:
+        - entity: sensor.homeseer_bridge_mqtt_updates_per_minute
+          name: MQTT Updates / Minute
+        - entity: sensor.homeseer_bridge_api_refreshes_per_hour
+          name: API Refreshes / Hour
+        - entity: sensor.homeseer_bridge_virtual_polls_per_minute
+          name: Virtual Polls / Minute
+        - entity: sensor.homeseer_bridge_uptime
+          name: Bridge Uptime
+
+# ---- homeseer_bridge_recent_activity_sections.yaml ----
+# Optional v2.6.0 Recent Activity sections.
+# Paste below your existing `sections:` list in a Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Recent Activity
+    - type: entities
+      title: Last Change
+      entities:
+        - entity: sensor.homeseer_bridge_recent_activity
+          name: Latest Activity
+        - entity: sensor.homeseer_bridge_recent_activity_count
+          name: Activity Events Recorded
+    - type: markdown
+      title: Recent Activity Details
+      content: >-
+        Recent activity events are stored as attributes on
+        `sensor.homeseer_bridge_recent_activity`.
+
+        Open Developer Tools → States and select that entity to view the latest
+        MQTT/API/manual-control activity feed with ref, source, old value, new value,
+        and timestamp.
+
+# ---- homeseer_bridge_live_event_viewer_sections.yaml ----
+# Optional v2.7.0 Live Event Viewer sections.
+# Paste below your existing `sections:` list in a Home Assistant Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Live Event Viewer
+
+    - type: markdown
+      title: Last 25 HomeSeer Changes
+      content: >-
+        {% set events = state_attr('sensor.homeseer_bridge_recent_activity', 'events') or [] %}
+        {% if events | count == 0 %}
+        No recent HomeSeer activity has been recorded yet.
+        {% else %}
+        {% for e in events[:25] %}
+        **{{ e.name }}**  
+        `{{ e.source | upper }}` · Ref `{{ e.ref }}` · {{ e.timestamp | timestamp_custom('%I:%M:%S %p', true) }}  
+        {{ e.old if e.old is not none else 'unknown' }} → **{{ e.new if e.new is not none else 'unknown' }}**
+
+        ---
+        {% endfor %}
+        {% endif %}
+
+    - type: entities
+      title: Activity Summary
+      entities:
+        - entity: sensor.homeseer_bridge_recent_activity
+          name: Latest Activity
+        - entity: sensor.homeseer_bridge_recent_activity_count
+          name: Events Recorded
+        - entity: sensor.homeseer_bridge_mqtt_updates
+          name: MQTT Updates
+        - entity: sensor.homeseer_bridge_api_refreshes
+          name: API Refreshes
+        - entity: sensor.homeseer_bridge_virtual_polls
+          name: Virtual Polls
+
+    - type: history-graph
+      title: Activity Counters
+      hours_to_show: 24
+      entities:
+        - sensor.homeseer_bridge_recent_activity_count
+        - sensor.homeseer_bridge_mqtt_updates
+        - sensor.homeseer_bridge_virtual_polls
