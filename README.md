@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.3.0
+
+- Adds Recent Activity filtering.
+- New option: `activity_excluded_terms`, defaulting to `utility,jon00`.
+- Filters noisy activity events from the Live Event Viewer without removing devices/entities.
+- Adds `sensor.homeseer_bridge_recent_activity_filtered_count`.
+- Adds activity filter details to diagnostics and sensor attributes.
+
+
 ## v3.2.2
 
 - Rebuilds Auto Area Apply from the stable v3.1.1 base.

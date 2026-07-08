@@ -35,6 +35,7 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("integration_started_timestamp", stats.get("integration_started_timestamp") or time())
     stats.setdefault("recent_activity", [])
     stats.setdefault("recent_activity_count", 0)
+    stats.setdefault("recent_activity_filtered_count", 0)
     stats.setdefault("last_activity", None)
     return stats
 
@@ -226,6 +227,38 @@ def live_device_stats(data: dict) -> dict:
             result["virtual_polls_per_min"] = round((stats.get("virtual_polls", 0) / uptime) * 60, 2)
 
     return result
+
+def _activity_text(device: dict | None) -> str:
+    if not device:
+        return ""
+    return " ".join(
+        str(device.get(key) or "")
+        for key in (
+            "name",
+            "location",
+            "location2",
+            "status",
+            "value",
+            "numeric_value",
+            "device_type",
+            "device_type_string",
+            "Device_Type_Description",
+            "device_type_description",
+            "interface",
+            "interface_name",
+            "labels_blob",
+            "raw_text",
+        )
+    ).lower()
+
+
+def _activity_is_excluded(data: dict, old_device: dict | None, new_device: dict | None) -> bool:
+    terms = data.get("activity_excluded_terms") or []
+    if not terms:
+        return False
+    text = f"{_activity_text(old_device)} {_activity_text(new_device)}"
+    return any(term in text for term in terms)
+
 def _activity_value(device: dict | None):
     if not device:
         return None
@@ -247,6 +280,9 @@ def _activity_name(device: dict | None, ref) -> str:
 def record_recent_activity(data: dict, ref, old_device: dict | None, new_device: dict | None, source: str) -> None:
     """Record a compact recent activity event for dashboards and diagnostics."""
     stats = ensure_stats(data)
+    if _activity_is_excluded(data, old_device, new_device):
+        stats["recent_activity_filtered_count"] = stats.get("recent_activity_filtered_count", 0) + 1
+        return
     old_value = _activity_value(old_device)
     new_value = _activity_value(new_device)
 

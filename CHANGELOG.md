@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.3.0
+
+- Adds Recent Activity filtering with configurable comma-separated terms.
+- Adds filtered activity count sensor and diagnostics attributes.
+
+
 ## v3.2.2
 
 - Rebuilt from stable v3.1.1.

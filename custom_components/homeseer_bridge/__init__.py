@@ -21,6 +21,8 @@ from .const import (
     SIGNAL_STATE_UPDATED,
     SIGNAL_NEW_DEVICES,
     CONF_ENABLE_DEBUG_LOGGING,
+    CONF_ACTIVITY_EXCLUDED_TERMS,
+    DEFAULT_ACTIVITY_EXCLUDED_TERMS,
     DEFAULT_ENABLE_DEBUG_LOGGING,
     CONF_REFRESH_INTERVAL_SECONDS,
     DEFAULT_REFRESH_INTERVAL_SECONDS,
@@ -59,6 +61,15 @@ def _device_changed(old: dict | None, new: dict) -> bool:
         or old.get("interface_name") != new.get("interface_name")
     )
 
+
+
+
+def _activity_excluded_terms(entry: ConfigEntry) -> list[str]:
+    raw = entry.options.get(
+        CONF_ACTIVITY_EXCLUDED_TERMS,
+        entry.data.get(CONF_ACTIVITY_EXCLUDED_TERMS, DEFAULT_ACTIVITY_EXCLUDED_TERMS),
+    )
+    return [term.strip().lower() for term in str(raw or "").split(",") if term.strip()]
 
 def _is_virtual_device(device: dict) -> bool:
     text = " ".join(
@@ -210,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unsub_reconnect_watch": None,
         "unsub_virtual_poll": None,
         "unmatched_topics": {},
+        "activity_excluded_terms": _activity_excluded_terms(entry),
         "reload_scheduled": False,
         "stats": {
             "mqtt_updates": 0,
@@ -433,7 +445,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v3.2.2 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v3.3.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

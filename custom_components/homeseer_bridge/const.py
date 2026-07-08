@@ -25,3 +25,6 @@ CONF_VIRTUAL_POLL_INTERVAL_SECONDS = "virtual_poll_interval_seconds"
 DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS = 5
 
 SIGNAL_NEW_DEVICES = "homeseer_bridge_new_devices"
+
+CONF_ACTIVITY_EXCLUDED_TERMS = "activity_excluded_terms"
+DEFAULT_ACTIVITY_EXCLUDED_TERMS = "utility,jon00"

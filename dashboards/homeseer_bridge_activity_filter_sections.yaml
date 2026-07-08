@@ -1,0 +1,26 @@
+# Optional v3.3.0 Activity Filter section.
+# Configure filtered terms in the integration Options screen.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Activity Filtering
+    - type: entities
+      title: Recent Activity Filter
+      entities:
+        - entity: sensor.homeseer_bridge_recent_activity
+          name: Latest Visible Activity
+        - entity: sensor.homeseer_bridge_recent_activity_count
+          name: Visible Events
+        - entity: sensor.homeseer_bridge_recent_activity_filtered_count
+          name: Filtered Events
+    - type: markdown
+      title: How filtering works
+      content: >-
+        Activity filtering is controlled from Settings → Devices & services →
+        HomeSeer Bridge → Configure.
+
+        Add comma-separated terms such as `utility,jon00`.
+
+        Matching activity is hidden from the Live Event Viewer but still leaves a
+        filtered count for troubleshooting.

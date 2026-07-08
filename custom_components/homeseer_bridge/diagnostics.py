@@ -124,6 +124,8 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "recent_activity_count": stats.get("recent_activity_count"),
             "last_activity": stats.get("last_activity"),
             "recent_activity": stats.get("recent_activity") or [],
+            "recent_activity_filtered_count": stats.get("recent_activity_filtered_count"),
+            "activity_excluded_terms": data.get("activity_excluded_terms") or [],
         },
         "breakdowns": {
             "interfaces": _count_by(state, "interface"),

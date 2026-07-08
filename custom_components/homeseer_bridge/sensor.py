@@ -117,6 +117,7 @@ MONITOR_SENSORS = [
     ("uptime_seconds", "HomeSeer Bridge Uptime", 's'),
     ("recent_activity", "HomeSeer Bridge Recent Activity", None),
     ("recent_activity_count", "HomeSeer Bridge Recent Activity Count", None),
+    ("recent_activity_filtered_count", "HomeSeer Bridge Recent Activity Filtered Count", None),
     ("model_lights", "HomeSeer Bridge Model Lights", None),
     ("model_switches", "HomeSeer Bridge Model Switches", None),
     ("model_sensors", "HomeSeer Bridge Model Sensors", None),
@@ -221,6 +222,8 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         }
         if self.key == "recent_activity":
             attrs["events"] = stats.get("recent_activity") or []
+            attrs["activity_excluded_terms"] = data.get("activity_excluded_terms") or []
+            attrs["filtered_count"] = stats.get("recent_activity_filtered_count", 0)
         if self.key == "model_average_confidence":
             attrs["model_summary"] = smart_model_stats(data)
         if self.key in {

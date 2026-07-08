@@ -9,6 +9,7 @@ from .const import (
     CONF_HS_URL,
     CONF_MQTT_PREFIX,
     CONF_EXCLUDED_TERMS,
+    CONF_ACTIVITY_EXCLUDED_TERMS,
     CONF_ENABLE_DEBUG_LOGGING,
     CONF_REFRESH_INTERVAL_SECONDS,
     CONF_RECONNECT_INTERVAL_SECONDS,
@@ -16,6 +17,7 @@ from .const import (
     DEFAULT_HS_URL,
     DEFAULT_MQTT_PREFIX,
     DEFAULT_EXCLUDED_TERMS,
+    DEFAULT_ACTIVITY_EXCLUDED_TERMS,
     DEFAULT_ENABLE_DEBUG_LOGGING,
     DEFAULT_REFRESH_INTERVAL_SECONDS,
     DEFAULT_RECONNECT_INTERVAL_SECONDS,
@@ -40,6 +42,7 @@ class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_HS_URL, default=DEFAULT_HS_URL): str,
             vol.Required(CONF_MQTT_PREFIX, default=DEFAULT_MQTT_PREFIX): str,
             vol.Optional(CONF_EXCLUDED_TERMS, default=DEFAULT_EXCLUDED_TERMS): str,
+            vol.Optional(CONF_ACTIVITY_EXCLUDED_TERMS, default=DEFAULT_ACTIVITY_EXCLUDED_TERMS): str,
             vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=DEFAULT_ENABLE_DEBUG_LOGGING): bool,
             vol.Optional(CONF_REFRESH_INTERVAL_SECONDS, default=DEFAULT_REFRESH_INTERVAL_SECONDS): int,
             vol.Optional(CONF_RECONNECT_INTERVAL_SECONDS, default=DEFAULT_RECONNECT_INTERVAL_SECONDS): int,
@@ -67,6 +70,10 @@ class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_EXCLUDED_TERMS,
                 default=options.get(CONF_EXCLUDED_TERMS, data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS)),
+            ): str,
+            vol.Optional(
+                CONF_ACTIVITY_EXCLUDED_TERMS,
+                default=options.get(CONF_ACTIVITY_EXCLUDED_TERMS, data.get(CONF_ACTIVITY_EXCLUDED_TERMS, DEFAULT_ACTIVITY_EXCLUDED_TERMS)),
             ): str,
             vol.Optional(
                 CONF_ENABLE_DEBUG_LOGGING,
