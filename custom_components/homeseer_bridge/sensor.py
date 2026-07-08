@@ -138,6 +138,13 @@ MONITOR_SENSORS = [
     ("model_climate", "HomeSeer Bridge Model Climate", None),
     ("model_other", "HomeSeer Bridge Model Other", None),
     ("model_average_confidence", "HomeSeer Bridge Model Average Confidence", '%'),
+    ("area_prep_area_count", "HomeSeer Bridge Proposed Areas", None),
+    ("area_prep_floor_count", "HomeSeer Bridge Proposed Floors", None),
+    ("area_prep_room_count", "HomeSeer Bridge Proposed Rooms", None),
+    ("area_prep_top_area_devices", "HomeSeer Bridge Largest Proposed Area Devices", None),
+    ("area_prep_top_floor_devices", "HomeSeer Bridge Largest Proposed Floor Devices", None),
+    ("area_apply_last_changed", "HomeSeer Bridge Last Area Apply Changed", None),
+    ("area_apply_last_skipped", "HomeSeer Bridge Last Area Apply Skipped", None),
 ]
 
 

@@ -1,5 +1,12 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.1
+
+- Fixes dashboard entity references reported by Spook.
+- Adds missing Auto Area Prep and Auto Area Apply monitor sensors that dashboard YAML already referenced.
+- No behavior changes to Repairs Prep.
+
+
 ## v3.5.0
 
 - Adds Repairs Prep engine.
