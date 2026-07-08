@@ -1,1 +1,1 @@
-Bridge HomeSeer HS4 devices into Home Assistant using mcsMQTT for state and the HomeSeer JSON API for control. Version 3.1.0 adds safe Auto Area Prep preview metrics for proposed area/floor mapping.
+Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Includes live bridge monitoring, diagnostics, dashboard YAML, recent activity, Smart Device Model classification, and Auto Area Prep preview metrics.

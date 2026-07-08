@@ -1,238 +1,92 @@
 # HomeSeer Home Assistant Bridge
 
-## v3.1.0
+A custom Home Assistant integration that bridges **HomeSeer HS4** devices into Home Assistant using the HomeSeer JSON API for discovery/control and **mcsMQTT** for fast state updates.
 
-- Adds Auto Area Prep preview layer.
-- Exposes proposed Home Assistant area/floor/room mappings from HomeSeer `location2` and `location` fields.
-- Adds proposed area/floor/room entity attributes.
-- Adds proposed area/floor/room count sensors.
-- Adds top area/floor mapping summaries to sensor attributes and diagnostics.
-- Safe preview only: this version does not modify Home Assistant Areas or Floors.
+Built for large HomeSeer installations with a focus on speed, diagnostics, visibility, and a polished Home Assistant experience.
 
+## Highlights
 
-## v3.0.0
+- Fast MQTT-driven state updates through mcsMQTT
+- HomeSeer JSON API control path
+- Supports lights, switches, sensors, binary sensors, locks, covers, fans, and climate-style devices
+- Hybrid sync for virtual HomeSeer devices that do not publish MQTT reliably
+- Bridge health sensors and binary sensors
+- API latency, MQTT activity, virtual polling, reconnect, and discovery metrics
+- Rich diagnostics download from Home Assistant
+- Dashboard YAML sections for bridge health, live device intelligence, recent activity, live event viewer, smart device modeling, and Auto Area Prep
+- Smart Device Model classification layer
+- Auto Area Prep preview from HomeSeer `location2` and `location`
+- HACS-compatible custom integration structure
 
-- Adds the first Smart Device Model layer.
-- Classifies HomeSeer devices into light, switch, sensor, binary_sensor, lock, cover, fan, climate, and other categories.
-- Adds classification confidence, suggested area, virtual/battery flags, and category metadata to entity attributes.
-- Adds model category count sensors and average confidence sensor.
-- Adds smart model summary to diagnostics.
-- Adds optional Smart Device Model dashboard YAML.
+## Current features
 
+### Bridge Monitor
 
-## v2.7.1
+Creates monitor entities such as:
 
-- Replaces the repository LICENSE file with standard MIT license text so GitHub/HACS can identify the SPDX license correctly.
-- No integration runtime changes from v2.7.0.
+- `binary_sensor.homeseer_bridge_connected`
+- `binary_sensor.homeseer_bridge_api_healthy`
+- `sensor.homeseer_bridge_health_score`
+- `sensor.homeseer_bridge_devices`
+- `sensor.homeseer_bridge_virtual_devices`
+- `sensor.homeseer_bridge_api_latency`
+- `sensor.homeseer_bridge_last_mqtt_age`
+- `sensor.homeseer_bridge_unmatched_topics`
 
+### Live Device Intelligence
 
-## v2.7.0
+Adds system-wide counts for devices on/off/unknown, lights, switches, covers, locks, fans, low battery devices, MQTT updates/minute, API refreshes/hour, virtual polls/minute, and uptime.
 
-- Adds optional Live Event Viewer dashboard YAML.
-- Shows the last 25 HomeSeer changes from the recent activity sensor attributes.
-- Adds an activity summary and 24-hour activity counter graph.
-- Adds a combined optional dashboard sections file for Live Intelligence, Recent Activity, and Live Event Viewer.
-- Keeps v2.6.0 recent activity tracking and v2.5.1 live intelligence.
+### Recent Activity and Live Event Viewer
 
+Tracks recent HomeSeer changes in:
 
-## v2.6.0
+- `sensor.homeseer_bridge_recent_activity`
+- `sensor.homeseer_bridge_recent_activity_count`
 
-- Adds Recent Activity tracking for MQTT, API refresh, virtual poll, and manual control updates.
-- Adds `sensor.homeseer_bridge_recent_activity` with the latest change as state and recent events as attributes.
-- Adds `sensor.homeseer_bridge_recent_activity_count`.
-- Adds recent activity to diagnostics.
-- Adds optional dashboard YAML under `dashboards/homeseer_bridge_recent_activity_sections.yaml`.
+Recent events include HomeSeer ref, device name, source, old value, new value, and timestamp.
 
+### Smart Device Model
 
-## v2.5.1
+Classifies HomeSeer devices into:
 
-- Rebuilds Live Device Intelligence from the stable v2.4.1 monitor-fix base.
-- Adds live device state sensors without changing the existing working dashboard cards.
-- Adds optional dashboard YAML for the new live intelligence sections.
-- Adds live device statistics to diagnostics.
+- light
+- switch
+- sensor
+- binary_sensor
+- lock
+- cover
+- fan
+- climate
+- other
 
+Entities include troubleshooting attributes for HomeSeer ref, location, interface, device type, proposed category, confidence, suggested area, virtual flag, and battery flag.
 
-## v2.4.0
+### Auto Area Prep
 
-- Adds automatic metadata sync for existing HomeSeer entities.
-- Entity names and device registry metadata refresh when HomeSeer device name, location, interface, or type changes.
-- Adds additional change detection for `device_type_string` and `interface_name`.
-- Adds metadata update counters to diagnostics.
-- Keeps dynamic discovery from v2.3.0 and safe device matching from v2.2.1.
+Preview-only mapping from HomeSeer location fields:
 
+- `location2` → proposed floor
+- `location` → proposed room
+- `location2 + location` → proposed area
 
-## v2.3.0
+This does **not** automatically create or modify Home Assistant Areas or Floors.
 
-- Adds safe dynamic entity discovery for newly added HomeSeer devices.
-- Platforms now listen for new HomeSeer refs and create matching entities without a full integration reload.
-- Avoids circular imports by keeping entity creation inside each platform module.
-- Adds counters for newly discovered refs and dynamically created entities.
-- Keeps the stable device matching improvements from v2.2.1.
+## Installation
 
+### HACS custom repository
 
-## v2.2.1
+1. Open Home Assistant.
+2. Go to **HACS**.
+3. Open the three-dot menu.
+4. Select **Custom repositories**.
+5. Add this repository URL.
+6. Category: **Integration**.
+7. Install **HomeSeer Bridge**.
+8. Restart Home Assistant.
+9. Go to **Settings → Devices & services → Add integration → HomeSeer Bridge**.
 
-- Safe device registry matching update based on the stable v2.0.1 build.
-- Uses HomeSeer refs as stable Home Assistant device registry identifiers.
-- Adds manufacturer, model, suggested area, and bridge hub linkage metadata.
-- Adds HomeSeer ref/location/interface/device type attributes for troubleshooting.
-- Avoids the dynamic-discovery circular import issue from v2.2.0.
-
-
-## v2.0.1
-
-- Updates the HomeSeer Bridge dashboard to use Home Assistant's modern Sections layout.
-- Adds `dashboards/homeseer_bridge_sections_view.yaml`, which can be pasted directly into a Sections dashboard view.
-- Updates the auto-created dashboard template to use the same Sections layout.
-- Adds dashboard import notes under `dashboards/README.md`.
-
-
-## v2.0.0
-
-- Automatically creates a HomeSeer Bridge Lovelace dashboard on startup if one does not already exist.
-- Adds the dashboard to the Home Assistant sidebar at `/homeseer-bridge`.
-- Does not overwrite an existing HomeSeer Bridge dashboard.
-- Adds `homeseer_bridge.create_dashboard` service to recreate the dashboard manually if needed.
-- Adds both full-dashboard and view-only dashboard YAML examples under `dashboards/`.
-
-
-## v1.8.0
-
-- Adds bridge-level availability handling so HomeSeer entities become unavailable when the bridge/API is unhealthy.
-- Expands diagnostics with summary, timestamps, API latency, virtual poll latency, last MQTT age, and richer breakdowns.
-- Adds a ready-to-copy Lovelace dashboard YAML at `dashboards/homeseer_bridge_health.yaml`.
-- Keeps Bridge Monitor entities from v1.7.x and MQTT dependency fix.
-
-
-## v1.7.2
-
-- Fixes startup ordering issue where HomeSeer Bridge could load before MQTT was ready.
-- Adds `mqtt` as a Home Assistant integration dependency in `manifest.json`.
-- Keeps the v1.7.1 Bridge Monitor entity fix.
-
-
-## v1.7.1
-
-- Fixes Bridge Monitor entities by adding them directly to the existing `sensor` and `binary_sensor` platforms.
-- Adds HomeSeer Bridge monitor sensors for device count, virtual devices, MQTT updates, API refreshes, API latency, virtual polling, new devices, unmatched topics, and health score.
-- Adds HomeSeer Bridge monitor binary sensors for connected and API healthy state.
-- Keeps the shared `bridge_stats.py` helper.
-
-
-## v1.7.0
-
-- Adds Bridge Monitor sensors for device count, MQTT updates, API refreshes, API latency, virtual polling, new-device discovery, unmatched topics, and health score.
-- Adds Bridge Monitor binary sensors for connected/API healthy state.
-- Adds lightweight `BridgeStats` helpers used by diagnostics and monitor entities.
-- Tracks API refresh latency, virtual poll latency, and last MQTT message age.
-- Keeps automatic discovery from v1.6.0 and diagnostics improvements from v1.6.1.
-
-
-## v1.6.1
-
-- Expands diagnostics with a clearer health summary.
-- Adds breakdowns by interface, location, device type, and status.
-- Adds virtual-device, new-device, reconnect, API refresh, and MQTT counters to diagnostics.
-- Adds samples for virtual refs, unavailable/unknown refs, unmatched MQTT topics, and devices.
-- Keeps sensitive config values redacted.
-
-
-## v1.6.0
-
-- Adds automatic new-device discovery.
-- Scheduled HomeSeer API refresh now detects newly added HomeSeer refs.
-- When new refs are found, the integration schedules a safe reload so Home Assistant creates the new entities.
-- Adds new-device discovery counters in diagnostics stats.
-- Keeps MQTT as the instant update path and keeps virtual-device polling from v1.5.2.
-
-
-## v1.5.2
-
-- Adds hybrid sync for HomeSeer virtual devices that do not publish MQTT.
-- Automatically detects likely virtual devices and polls only those devices every 5 seconds by default.
-- Adds `virtual_poll_interval_seconds` option; set it to `0` to disable virtual polling.
-- Keeps MQTT as the instant update path for physical devices.
-- Preserves the v1.5.1 migration fix by keeping config flow version at `1`.
-
-
-## v1.5.0
-
-- Adds automatic reconnect/backoff checks after HomeSeer API failures.
-- Adds redacted diagnostics output for config data and options.
-- Adds reconnect statistics to diagnostics.
-- Expands options flow with reconnect interval setting.
-- Improves local brand icon/logo assets.
-- Keeps HACS-compliant metadata from v1.4.0.
-
-
-## v1.4.0
-
-- Updates `manifest.json` for stricter Home Assistant/HACS validation.
-- Simplifies `hacs.json` to the current HACS-compatible minimum.
-- Adds local brand assets at `custom_components/homeseer_bridge/brand/icon.png` and `logo.png`.
-- Sets code owner and integration type metadata.
-- Keeps the v1.3.1 diagnostics fix and v1.3.0 services.
-
-
-## v1.3.1
-
-- Fixes diagnostics import/setup error.
-- Makes diagnostics defensive so it cannot prevent the integration from loading.
-
-
-## v1.3.0
-
-- Adds Home Assistant services:
-  - `homeseer_bridge.refresh_all`
-  - `homeseer_bridge.control_device`
-  - `homeseer_bridge.reload_devices`
-- Adds manual refresh/control/reload counters to diagnostics.
-- Manual control immediately updates the local state cache while MQTT confirmation follows.
-
-
-## v1.2.0
-
-- Adds incremental API refresh to keep HomeSeer and Home Assistant synchronized.
-- Default refresh interval is 600 seconds; set to 0 to disable.
-- MQTT remains the fast path for instant updates.
-- API refresh preserves cached devices if HomeSeer returns a partial response.
-- Rebuilds MQTT topic lookup after refresh so renamed/new devices can match.
-
-
-## v1.1.0
-
-- Includes v1.0.2 thread-safety fix for MQTT-driven updates.
-- Adds Home Assistant diagnostics support.
-- Tracks recent unmatched MQTT topics for troubleshooting.
-- Adds optional debug logging in the integration options.
-- Updates repository links to `whoamib2/homeseer-home-assistant-bridge`.
-- Shows HomeSeer interface/plugin info in the HA device model where available.
-
-
-## v1.0.2
-
-- Fixes thread-safety error from MQTT updates.
-- Ensures entity state writes run on the Home Assistant event loop.
-- Should make MQTT-driven updates apply immediately instead of being delayed or rejected.
-
-
-## v1.0.1
-
-- Fixes entity setup crash: `NoneType object has no attribute data`.
-- Entities no longer access `self.hass` during initialization.
-
-
-Custom Home Assistant integration for bridging HomeSeer HS4 devices into Home Assistant.
-
-## What it does
-
-- Discovers HomeSeer devices through the HS4 JSON API.
-- Uses mcsMQTT topics for state updates.
-- Sends commands back to HomeSeer through the HS4 JSON API.
-- Supports switches, lights/dimmers, locks, covers, fans, binary sensors, and sensors.
-- Supports excluded terms such as `august,yolink,shelly` to avoid duplicating devices already integrated directly in Home Assistant.
-
-## Manual install
+### Manual install
 
 Copy:
 
@@ -246,15 +100,11 @@ to:
 /config/custom_components/homeseer_bridge
 ```
 
-Restart Home Assistant.
+Restart Home Assistant, then add the integration from **Settings → Devices & services**.
 
-Then add:
+## Configuration
 
-```text
-Settings → Devices & services → Add integration → HomeSeer Bridge
-```
-
-Recommended config:
+Typical settings:
 
 ```text
 HomeSeer URL: http://192.168.0.193
@@ -262,12 +112,63 @@ MQTT Prefix: Homeseer/Chip23/mcsMQTT
 Excluded terms: august,yolink,shelly
 ```
 
-## HACS custom repository install
+Use excluded terms to avoid duplicating devices already integrated directly into Home Assistant.
 
-1. Put this repository on GitHub.
-2. In Home Assistant, open HACS.
-3. Click the three-dot menu → Custom repositories.
-4. Paste the GitHub repo URL.
-5. Category: Integration.
-6. Install HomeSeer Bridge.
-7. Restart Home Assistant.
+## Dashboards
+
+Dashboard snippets are included in `dashboards/`.
+
+Useful files:
+
+- `dashboards/homeseer_bridge_sections_view.yaml`
+- `dashboards/homeseer_bridge_live_intelligence_sections.yaml`
+- `dashboards/homeseer_bridge_recent_activity_sections.yaml`
+- `dashboards/homeseer_bridge_live_event_viewer_sections.yaml`
+- `dashboards/homeseer_bridge_smart_device_model_sections.yaml`
+- `dashboards/homeseer_bridge_auto_area_prep_sections.yaml`
+- `dashboards/homeseer_bridge_optional_sections_all.yaml`
+
+For current Home Assistant dashboards using the **Sections** layout, paste the desired YAML into a Sections dashboard view.
+
+## Services
+
+- `homeseer_bridge.refresh_all`
+- `homeseer_bridge.control_device`
+- `homeseer_bridge.reload_devices`
+- `homeseer_bridge.create_dashboard`
+
+## Diagnostics
+
+Go to:
+
+```text
+Settings → Devices & services → HomeSeer Bridge → Download diagnostics
+```
+
+Diagnostics include bridge health, API status/latency, MQTT activity, virtual polling, unmatched MQTT topics, recent activity, Smart Device Model summary, Auto Area Prep summary, and sample HomeSeer devices.
+
+## Documentation
+
+- [Installation](docs/INSTALL.md)
+- [Dashboard setup](docs/DASHBOARDS.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Changelog](CHANGELOG.md)
+
+## Recommended GitHub About section
+
+Description:
+
+```text
+Home Assistant custom integration for HomeSeer HS4 with MQTT updates, diagnostics, smart device modeling, dashboards, and Auto Area Prep.
+```
+
+Suggested topics:
+
+```text
+home-assistant, homeseer, homeseer-hs4, mqtt, mcsmqtt, hacs, smart-home, home-automation, custom-integration
+```
+
+## License
+
+MIT License
