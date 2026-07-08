@@ -38,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = build_entities(list(state.keys()))
 
     entities.extend(
-        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+    HomeSeerBridgeMonitorSensor(entry, key, name, unit)
         for key, name, unit in MONITOR_SENSORS
     )
     async_add_entities(entities)
@@ -102,9 +102,13 @@ MONITOR_SENSORS = [
     ("switches_on", "HomeSeer Bridge Switches On", None),
     ("switches_off", "HomeSeer Bridge Switches Off", None),
     ("binary_sensors_on", "HomeSeer Bridge Binary Sensors On", None),
+    ("binary_sensors_off", "HomeSeer Bridge Binary Sensors Off", None),
     ("covers_open", "HomeSeer Bridge Covers Open", None),
+    ("covers_closed", "HomeSeer Bridge Covers Closed", None),
     ("locks_unlocked", "HomeSeer Bridge Locks Unlocked", None),
+    ("locks_locked", "HomeSeer Bridge Locks Locked", None),
     ("fans_on", "HomeSeer Bridge Fans On", None),
+    ("fans_off", "HomeSeer Bridge Fans Off", None),
     ("climate_active", "HomeSeer Bridge Climate Active", None),
     ("low_battery_devices", "HomeSeer Bridge Low Battery Devices", None),
     ("mqtt_updates_per_min", "HomeSeer Bridge MQTT Updates Per Minute", None),
@@ -125,9 +129,9 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit
 
 
-@property
-def device_info(self):
-    return bridge_device_info()
+    @property
+    def device_info(self):
+        return bridge_device_info()
 
     @property
     def available(self):
