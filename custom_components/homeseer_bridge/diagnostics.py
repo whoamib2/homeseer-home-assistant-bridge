@@ -6,7 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .repairs_engine import repairs_report
 from .device_model import summarize_models, model_dict, area_floor_summary
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available, live_device_stats, device_explorer_stats
 
@@ -85,7 +84,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "smart_device_model": summarize_models(state),
         "auto_area_prep": area_floor_summary(state),
         "device_explorer": device_explorer_stats(data),
-        "repairs": repairs_report(data),
         "summary": {
             "health_score": health_score(data),
             "bridge_available": bridge_available(data),
