@@ -4,7 +4,8 @@ from time import monotonic, time
 
 from .device_model import summarize_models, category_count, area_floor_summary
 
-MAX_RECENT_ACTIVITY = 50
+MAX_RECENT_ACTIVITY = 10
+MAX_ACTIVITY_TEXT_LENGTH = 80
 
 
 def ensure_stats(data: dict) -> dict:
@@ -39,13 +40,6 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("activity_ref_counts", {})
     stats.setdefault("filtered_activity_ref_counts", {})
     stats.setdefault("last_activity_by_ref", {})
-    stats.setdefault("cached_repairs_report", None)
-    stats.setdefault("cached_repairs_report_timestamp", None)
-    stats.setdefault("repairs_total_candidates", 0)
-    stats.setdefault("repairs_critical_count", 0)
-    stats.setdefault("repairs_warning_count", 0)
-    stats.setdefault("repairs_info_count", 0)
-    stats.setdefault("repairs_health_score", None)
     stats.setdefault("last_activity", None)
     return stats
 
@@ -294,12 +288,23 @@ def _activity_value(device: dict | None):
     return device.get("value")
 
 
+
+def _short_activity_value(value):
+    """Keep activity attributes/dashboard payloads small and safe to render."""
+    if value is None:
+        return None
+    text = str(value).replace("\n", " ").replace("\r", " ").strip()
+    if len(text) > MAX_ACTIVITY_TEXT_LENGTH:
+        return text[:MAX_ACTIVITY_TEXT_LENGTH - 3] + "..."
+    return text
+
+
 def _activity_name(device: dict | None, ref) -> str:
     if not device:
         return f"HomeSeer Ref {ref}"
     parts = [device.get("location2"), device.get("location"), device.get("name")]
     name = " ".join(str(p).strip() for p in parts if p)
-    return name or f"HomeSeer Ref {ref}"
+    return _short_activity_value(name or f"HomeSeer Ref {ref}")
 
 
 def record_recent_activity(data: dict, ref, old_device: dict | None, new_device: dict | None, source: str) -> None:
@@ -324,8 +329,8 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
         "ref": ref,
         "name": _activity_name(new_device or old_device, ref),
         "source": source,
-        "old": old_value,
-        "new": new_value,
+        "old": _short_activity_value(old_value),
+        "new": _short_activity_value(new_value),
     }
 
     activity = list(stats.get("recent_activity") or [])
@@ -334,9 +339,9 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
     stats["recent_activity"] = activity
     stats["recent_activity_count"] = stats.get("recent_activity_count", 0) + 1
 
-    old_text = "" if old_value is None else str(old_value)
-    new_text = "" if new_value is None else str(new_value)
-    stats["last_activity"] = f"{event['name']}: {old_text} → {new_text}".strip()
+    old_text = "" if event.get("old") is None else str(event.get("old"))
+    new_text = "" if event.get("new") is None else str(event.get("new"))
+    stats["last_activity"] = _short_activity_value(f"{event['name']}: {old_text} → {new_text}".strip())
     _increment_ref_count(stats, "activity_ref_counts", ref)
     stats.setdefault("last_activity_by_ref", {})[str(ref)] = event
 def smart_model_stats(data: dict) -> dict:

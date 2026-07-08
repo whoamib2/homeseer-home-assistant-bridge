@@ -13,7 +13,6 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .repairs_engine import get_cached_repairs_report
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
 
 
@@ -123,11 +122,6 @@ MONITOR_SENSORS = [
     ("device_explorer_filtered_refs", "HomeSeer Bridge Explorer Filtered Refs", None),
     ("device_explorer_top_active_count", "HomeSeer Bridge Explorer Top Active Count", None),
     ("device_explorer_top_filtered_count", "HomeSeer Bridge Explorer Top Filtered Count", None),
-    ("repairs_total_candidates", "HomeSeer Bridge Repair Candidates", None),
-    ("repairs_critical_count", "HomeSeer Bridge Critical Repairs", None),
-    ("repairs_warning_count", "HomeSeer Bridge Repair Warnings", None),
-    ("repairs_info_count", "HomeSeer Bridge Repair Info", None),
-    ("repairs_health_score", "HomeSeer Bridge Repairs Health Score", '%'),
     ("model_lights", "HomeSeer Bridge Model Lights", None),
     ("model_switches", "HomeSeer Bridge Model Switches", None),
     ("model_sensors", "HomeSeer Bridge Model Sensors", None),
@@ -229,18 +223,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             top = explorer.get("top_filtered_refs") or []
             return top[0].get("count", 0) if top else 0
 
-        report = get_cached_repairs_report(data)
-        if self.key == "repairs_total_candidates":
-            return report.get("total_candidates", 0)
-        if self.key == "repairs_critical_count":
-            return report.get("critical_count", 0)
-        if self.key == "repairs_warning_count":
-            return report.get("warning_count", 0)
-        if self.key == "repairs_info_count":
-            return report.get("info_count", 0)
-        if self.key == "repairs_health_score":
-            return report.get("repair_health_score")
-
         return stats.get(self.key)
 
     @property
@@ -255,7 +237,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "reconnect_successes": stats.get("reconnect_successes"),
         }
         if self.key == "recent_activity":
-            attrs["events"] = stats.get("recent_activity") or []
+            attrs["events"] = (stats.get("recent_activity") or [])[:10]
             attrs["activity_excluded_terms"] = data.get("activity_excluded_terms") or []
             attrs["filtered_count"] = stats.get("recent_activity_filtered_count", 0)
         if self.key == "model_average_confidence":
@@ -277,12 +259,4 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "device_explorer_top_filtered_count",
         }:
             attrs["device_explorer"] = device_explorer_stats(data)
-        if self.key in {
-            "repairs_total_candidates",
-            "repairs_critical_count",
-            "repairs_warning_count",
-            "repairs_info_count",
-            "repairs_health_score",
-        }:
-            attrs["repairs_report"] = get_cached_repairs_report(data)
         return attrs

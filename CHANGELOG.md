@@ -1,9 +1,10 @@
 # Changelog
 
-## v3.5.2
+## v3.4.1
 
-- Adds cached Repairs Prep from stable v3.4.0.
-- Avoids expensive repair calculations during sensor state reads.
+- Caps recent activity to 10 events.
+- Truncates activity event names and values.
+- Reduces Live Event Viewer dashboard payload size.
 
 
 ## v3.4.0

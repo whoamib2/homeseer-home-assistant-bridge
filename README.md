@@ -1,12 +1,12 @@
 # HomeSeer Home Assistant Bridge
 
-## v3.5.2
+## v3.4.1
 
-- Rebuilds Repairs Prep from the stable v3.4.0 base.
-- Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
-- Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
-- Adds repair candidate sensors and diagnostics using cached data.
-- Designed for large HomeSeer installs to avoid Home Assistant event-loop stalls.
+- Activity Safety Fix built from stable v3.4.0.
+- Caps recent activity history to 10 events.
+- Truncates activity names and old/new values to prevent large dashboard payloads.
+- Keeps sensor attributes small so the Activity/Live Event Viewer dashboard does not stall Home Assistant.
+- No Repairs Prep changes included.
 
 
 ## v3.4.0
