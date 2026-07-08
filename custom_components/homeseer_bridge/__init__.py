@@ -31,6 +31,7 @@ from .const import (
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
 from .dashboard import async_ensure_dashboard
+from .area_apply import async_apply_suggested_areas
 from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll, record_recent_activity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ SERVICE_REFRESH_ALL = "refresh_all"
 SERVICE_CONTROL_DEVICE = "control_device"
 SERVICE_RELOAD_DEVICES = "reload_devices"
 SERVICE_CREATE_DASHBOARD = "create_dashboard"
+SERVICE_APPLY_SUGGESTED_AREAS = "apply_suggested_areas"
 
 
 def _device_changed(old: dict | None, new: dict) -> bool:
@@ -229,6 +231,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "last_new_entities_created": 0,
             "total_new_entities_created": 0,
             "metadata_updates": 0,
+            "last_area_apply_changed": 0,
+            "last_area_apply_skipped": 0,
+            "last_area_apply_dry_run": None,
+            "last_area_apply": None,
         },
     }
 
@@ -371,6 +377,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         created = await async_ensure_dashboard(hass)
         _LOGGER.info("HomeSeer Bridge dashboard create service completed; created=%s", created)
 
+
+async def handle_apply_suggested_areas(call: ServiceCall):
+    dry_run = bool(call.data.get("dry_run", True))
+    overwrite = bool(call.data.get("overwrite", False))
+    limit = call.data.get("limit")
+    limit = int(limit) if limit is not None else None
+    result = await async_apply_suggested_areas(
+        hass,
+        entry.entry_id,
+        dry_run=dry_run,
+        overwrite=overwrite,
+        limit=limit,
+    )
+    _LOGGER.info("HomeSeer Bridge area apply result: %s", result)
+
     async def handle_reload_devices(call: ServiceCall):
         fresh_state = await api.async_get_status()
         data = hass.data[DOMAIN][entry.entry_id]
@@ -400,9 +421,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
     if not hass.services.has_service(DOMAIN, SERVICE_CREATE_DASHBOARD):
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
+    if not hass.services.has_service(DOMAIN, SERVICE_APPLY_SUGGESTED_AREAS):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_APPLY_SUGGESTED_AREAS,
+            handle_apply_suggested_areas,
+            schema=vol.Schema({
+                vol.Optional("dry_run", default=True): bool,
+                vol.Optional("overwrite", default=False): bool,
+                vol.Optional("limit"): vol.Coerce(int),
+            }),
+        )
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.7.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v3.2.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
@@ -431,7 +463,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
     if not hass.data.get(DOMAIN):
-        for service in (SERVICE_REFRESH_ALL, SERVICE_CONTROL_DEVICE, SERVICE_RELOAD_DEVICES, SERVICE_CREATE_DASHBOARD):
+        for service in (SERVICE_REFRESH_ALL, SERVICE_CONTROL_DEVICE, SERVICE_RELOAD_DEVICES, SERVICE_CREATE_DASHBOARD, SERVICE_APPLY_SUGGESTED_AREAS):
             if hass.services.has_service(DOMAIN, service):
                 hass.services.async_remove(DOMAIN, service)
     return unload_ok

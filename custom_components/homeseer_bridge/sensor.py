@@ -201,6 +201,10 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "area_prep_top_floor_devices":
             top = area_stats.get("top_floors") or {}
             return next(iter(top.values()), 0)
+        if self.key == "area_apply_last_changed":
+            return stats.get("last_area_apply_changed", 0)
+        if self.key == "area_apply_last_skipped":
+            return stats.get("last_area_apply_skipped", 0)
 
         return stats.get(self.key)
 
@@ -227,4 +231,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "area_prep_top_floor_devices",
         }:
             attrs["area_floor_summary"] = area_floor_stats(data)
+        if self.key in {"area_apply_last_changed", "area_apply_last_skipped"}:
+            attrs["last_area_apply"] = stats.get("last_area_apply")
         return attrs

@@ -189,3 +189,30 @@
         Open Developer Tools → States and select one of the Auto Area Prep
         sensors to view the `area_floor_summary` attribute with top proposed
         areas, floors, rooms, and sample mappings.
+
+# ---- homeseer_bridge_auto_area_apply_sections.yaml ----
+# Optional v3.2.0 Auto Area Apply service section.
+# The service is manual and dry-run by default.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Auto Area Apply
+    - type: entities
+      title: Last Area Apply Run
+      entities:
+        - entity: sensor.homeseer_bridge_last_area_apply_changed
+          name: Changed / Would Change
+        - entity: sensor.homeseer_bridge_last_area_apply_skipped
+          name: Skipped
+    - type: markdown
+      title: How to use
+      content: >-
+        Go to Developer Tools → Services and run
+        `homeseer_bridge.apply_suggested_areas`.
+
+        Start with `dry_run: true` to preview changes.
+
+        When the preview looks good, run with `dry_run: false`.
+
+        By default, devices already assigned to an area are skipped.

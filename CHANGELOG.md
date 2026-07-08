@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.2.0
+
+- Adds manual dry-run-first Auto Area Apply service.
+- Adds area apply diagnostics and dashboard snippet.
+
+
 ## v3.1.1
 
 - Documentation refresh.

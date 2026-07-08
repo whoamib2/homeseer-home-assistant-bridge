@@ -33,3 +33,32 @@ create_dashboard:
   name: Create HomeSeer Bridge dashboard
   description: Create the HomeSeer Bridge Lovelace dashboard if it does not already exist.
   fields: {}
+
+
+apply_suggested_areas:
+  name: Apply suggested areas
+  description: Preview or apply proposed Home Assistant Areas to HomeSeer Bridge devices using HomeSeer location2/location mapping. Dry-run is enabled by default.
+  fields:
+    dry_run:
+      name: Dry run
+      description: Preview changes without modifying the Home Assistant device registry.
+      required: false
+      default: true
+      selector:
+        boolean:
+    overwrite:
+      name: Overwrite existing areas
+      description: If false, devices already assigned to an area are skipped.
+      required: false
+      default: false
+      selector:
+        boolean:
+    limit:
+      name: Limit
+      description: Optional maximum number of devices to preview/apply.
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10000
+          mode: box

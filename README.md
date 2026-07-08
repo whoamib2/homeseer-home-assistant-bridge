@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.2.0
+
+- Adds manual `homeseer_bridge.apply_suggested_areas` service.
+- Service is dry-run by default and uses Auto Area Prep mappings from HomeSeer `location2` and `location`.
+- Skips devices already assigned to an area unless `overwrite: true` is used.
+- Creates missing Home Assistant Areas only when run with `dry_run: false`.
+- Adds last area apply result sensors, diagnostics, and optional dashboard YAML.
+
+
 A custom Home Assistant integration that bridges **HomeSeer HS4** devices into Home Assistant using the HomeSeer JSON API for discovery/control and **mcsMQTT** for fast state updates.
 
 Built for large HomeSeer installations with a focus on speed, diagnostics, visibility, and a polished Home Assistant experience.
