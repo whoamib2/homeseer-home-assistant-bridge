@@ -141,3 +141,46 @@ def summarize_models(state: dict) -> dict:
 
 def category_count(state: dict, category: str) -> int:
     return sum(1 for ref, device in state.items() if classify_device(device, ref).category == category)
+def area_floor_summary(state: dict) -> dict:
+    """Summarize proposed Home Assistant area/floor mapping from HomeSeer locations.
+
+    Safe prep only: this does not create or modify HA areas/floors.
+    """
+    areas: dict[str, int] = {}
+    floors: dict[str, int] = {}
+    rooms: dict[str, int] = {}
+    mappings = []
+
+    for ref, device in state.items():
+        model = classify_device(device, ref)
+        floor = model.location2 or "Unknown"
+        room = model.location or "Unknown"
+        area = model.suggested_area or "Unknown"
+
+        floors[floor] = floors.get(floor, 0) + 1
+        rooms[room] = rooms.get(room, 0) + 1
+        areas[area] = areas.get(area, 0) + 1
+
+        if len(mappings) < 200:
+            mappings.append({
+                "ref": ref,
+                "name": model.name,
+                "proposed_floor": floor,
+                "proposed_area": area,
+                "room": room,
+                "category": model.category,
+                "confidence": model.confidence,
+            })
+
+    def top_items(values: dict[str, int], limit: int = 20):
+        return dict(sorted(values.items(), key=lambda item: item[1], reverse=True)[:limit])
+
+    return {
+        "area_count": len(areas),
+        "floor_count": len(floors),
+        "room_count": len(rooms),
+        "top_areas": top_items(areas),
+        "top_floors": top_items(floors),
+        "top_rooms": top_items(rooms),
+        "sample_mappings": mappings,
+    }

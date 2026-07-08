@@ -13,7 +13,7 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -188,6 +188,20 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "model_average_confidence":
             return model_stats.get("average_confidence")
 
+        area_stats = area_floor_stats(data)
+        if self.key == "area_prep_area_count":
+            return area_stats.get("area_count")
+        if self.key == "area_prep_floor_count":
+            return area_stats.get("floor_count")
+        if self.key == "area_prep_room_count":
+            return area_stats.get("room_count")
+        if self.key == "area_prep_top_area_devices":
+            top = area_stats.get("top_areas") or {}
+            return next(iter(top.values()), 0)
+        if self.key == "area_prep_top_floor_devices":
+            top = area_stats.get("top_floors") or {}
+            return next(iter(top.values()), 0)
+
         return stats.get(self.key)
 
     @property
@@ -205,4 +219,12 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             attrs["events"] = stats.get("recent_activity") or []
         if self.key == "model_average_confidence":
             attrs["model_summary"] = smart_model_stats(data)
+        if self.key in {
+            "area_prep_area_count",
+            "area_prep_floor_count",
+            "area_prep_room_count",
+            "area_prep_top_area_devices",
+            "area_prep_top_floor_devices",
+        }:
+            attrs["area_floor_summary"] = area_floor_stats(data)
         return attrs

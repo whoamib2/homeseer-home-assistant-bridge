@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from time import monotonic, time
 
-from .device_model import summarize_models, category_count
+from .device_model import summarize_models, category_count, area_floor_summary
 
 MAX_RECENT_ACTIVITY = 50
 
@@ -277,3 +277,5 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
     stats["last_activity"] = f"{event['name']}: {old_text} → {new_text}".strip()
 def smart_model_stats(data: dict) -> dict:
     return summarize_models(data.get("state") or {})
+def area_floor_stats(data: dict) -> dict:
+    return area_floor_summary(data.get("state") or {})

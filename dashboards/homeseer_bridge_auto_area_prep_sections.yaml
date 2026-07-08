@@ -1,0 +1,26 @@
+# Optional v3.1.0 Auto Area Prep section.
+# Safe preview only: this does not create or change Home Assistant Areas/Floors.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Auto Area Prep
+    - type: entities
+      title: Proposed Area/Floor Mapping
+      entities:
+        - entity: sensor.homeseer_bridge_proposed_areas
+          name: Proposed Areas
+        - entity: sensor.homeseer_bridge_proposed_floors
+          name: Proposed Floors
+        - entity: sensor.homeseer_bridge_proposed_rooms
+          name: Proposed Rooms
+        - entity: sensor.homeseer_bridge_largest_proposed_area_devices
+          name: Largest Area Device Count
+        - entity: sensor.homeseer_bridge_largest_proposed_floor_devices
+          name: Largest Floor Device Count
+    - type: markdown
+      title: Mapping Details
+      content: >-
+        Open Developer Tools → States and select one of the Auto Area Prep
+        sensors to view the `area_floor_summary` attribute with top proposed
+        areas, floors, rooms, and sample mappings.

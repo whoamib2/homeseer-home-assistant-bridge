@@ -51,6 +51,9 @@ class HomeSeerEntityBase:
             "homeseer_category": model.get("category"),
             "homeseer_category_confidence": model.get("confidence"),
             "homeseer_suggested_area": model.get("suggested_area"),
+            "homeseer_proposed_area": model.get("suggested_area"),
+            "homeseer_proposed_floor": model.get("location2"),
+            "homeseer_proposed_room": model.get("location"),
             "homeseer_is_virtual": model.get("is_virtual"),
             "homeseer_is_battery": model.get("is_battery"),
         }

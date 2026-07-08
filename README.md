@@ -1,5 +1,15 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.1.0
+
+- Adds Auto Area Prep preview layer.
+- Exposes proposed Home Assistant area/floor/room mappings from HomeSeer `location2` and `location` fields.
+- Adds proposed area/floor/room entity attributes.
+- Adds proposed area/floor/room count sensors.
+- Adds top area/floor mapping summaries to sensor attributes and diagnostics.
+- Safe preview only: this version does not modify Home Assistant Areas or Floors.
+
+
 ## v3.0.0
 
 - Adds the first Smart Device Model layer.
