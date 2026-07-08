@@ -31,7 +31,7 @@ from .const import (
 )
 from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
 from .dashboard import async_ensure_dashboard
-from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll
+from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll, record_recent_activity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,9 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
         if old_device is None:
             new_refs.append(ref)
         if _device_changed(old_device, new_device):
+            old_snapshot = dict(old_device) if old_device is not None else None
             current_state[ref] = new_device
+            record_recent_activity(data, ref, old_snapshot, new_device, "api")
             changed_refs.append(ref)
 
     data["topic_lookup"] = build_topic_lookup(current_state, entry)
@@ -156,7 +158,9 @@ async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: Ho
             continue
         old_device = current_state.get(ref)
         if _device_changed(old_device, new_device):
+            old_snapshot = dict(old_device) if old_device is not None else None
             current_state[ref] = new_device
+            record_recent_activity(data, ref, old_snapshot, new_device, "api")
             changed_refs.append(ref)
 
     data["stats"]["virtual_polls"] += 1
@@ -264,7 +268,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if debug_logging:
             _LOGGER.debug("HomeSeer MQTT update matched ref=%s topic=%s payload=%s", ref, msg.topic, msg.payload)
 
+        old_snapshot = dict(device)
         apply_mqtt_state(device, msg.payload)
+        record_recent_activity(data, ref, old_snapshot, device, "mqtt")
         mark_mqtt_update(ensure_stats(data))
         hass.loop.call_soon_threadsafe(
             async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
@@ -354,7 +360,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["stats"]["manual_controls"] += 1
         device = data["state"].get(ref)
         if device is not None:
+            old_snapshot = dict(device)
             apply_mqtt_state(device, value)
+            record_recent_activity(data, ref, old_snapshot, device, "manual_control")
             hass.loop.call_soon_threadsafe(
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
             )
@@ -394,7 +402,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
 
     _LOGGER.info(
-        "HomeSeer Bridge v2.4.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v2.6.0 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

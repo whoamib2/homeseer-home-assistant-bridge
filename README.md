@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v2.6.0
+
+- Adds Recent Activity tracking for MQTT, API refresh, virtual poll, and manual control updates.
+- Adds `sensor.homeseer_bridge_recent_activity` with the latest change as state and recent events as attributes.
+- Adds `sensor.homeseer_bridge_recent_activity_count`.
+- Adds recent activity to diagnostics.
+- Adds optional dashboard YAML under `dashboards/homeseer_bridge_recent_activity_sections.yaml`.
+
+
 ## v2.5.1
 
 - Rebuilds Live Device Intelligence from the stable v2.4.1 monitor-fix base.

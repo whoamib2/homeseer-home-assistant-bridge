@@ -1,0 +1,23 @@
+# Optional v2.6.0 Recent Activity sections.
+# Paste below your existing `sections:` list in a Sections dashboard.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Recent Activity
+    - type: entities
+      title: Last Change
+      entities:
+        - entity: sensor.homeseer_bridge_recent_activity
+          name: Latest Activity
+        - entity: sensor.homeseer_bridge_recent_activity_count
+          name: Activity Events Recorded
+    - type: markdown
+      title: Recent Activity Details
+      content: >-
+        Recent activity events are stored as attributes on
+        `sensor.homeseer_bridge_recent_activity`.
+
+        Open Developer Tools → States and select that entity to view the latest
+        MQTT/API/manual-control activity feed with ref, source, old value, new value,
+        and timestamp.

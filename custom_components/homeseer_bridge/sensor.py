@@ -38,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = build_entities(list(state.keys()))
 
     entities.extend(
-    HomeSeerBridgeMonitorSensor(entry, key, name, unit)
+        HomeSeerBridgeMonitorSensor(entry, key, name, unit)
         for key, name, unit in MONITOR_SENSORS
     )
     async_add_entities(entities)
@@ -115,6 +115,8 @@ MONITOR_SENSORS = [
     ("api_refreshes_per_hour", "HomeSeer Bridge API Refreshes Per Hour", None),
     ("virtual_polls_per_min", "HomeSeer Bridge Virtual Polls Per Minute", None),
     ("uptime_seconds", "HomeSeer Bridge Uptime", 's'),
+    ("recent_activity", "HomeSeer Bridge Recent Activity", None),
+    ("recent_activity_count", "HomeSeer Bridge Recent Activity Count", None),
 ]
 
 
@@ -152,6 +154,8 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             return len(data.get("unmatched_topics") or {})
         if self.key == "health_score":
             return health_score(data)
+        if self.key == "recent_activity":
+            return stats.get("last_activity") or "No recent activity"
 
         live = live_device_stats(data)
         if self.key in live:
@@ -163,10 +167,13 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
     def extra_state_attributes(self):
         data = self.hass.data[DOMAIN][self.entry.entry_id]
         stats = ensure_stats(data)
-        return {
+        attrs = {
             "api_healthy": stats.get("last_api_ok"),
             "consecutive_api_failures": stats.get("consecutive_api_failures"),
             "topic_lookup_keys": len(data.get("topic_lookup") or {}),
             "reconnect_attempts": stats.get("reconnect_attempts"),
             "reconnect_successes": stats.get("reconnect_successes"),
         }
+        if self.key == "recent_activity":
+            attrs["events"] = stats.get("recent_activity") or []
+        return attrs

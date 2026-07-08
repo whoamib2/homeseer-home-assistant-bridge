@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from time import monotonic, time
 
+MAX_RECENT_ACTIVITY = 50
+
 
 def ensure_stats(data: dict) -> dict:
     stats = data.setdefault("stats", {})
@@ -29,6 +31,9 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("last_api_refresh_timestamp", None)
     stats.setdefault("last_virtual_poll_timestamp", None)
     stats.setdefault("integration_started_timestamp", stats.get("integration_started_timestamp") or time())
+    stats.setdefault("recent_activity", [])
+    stats.setdefault("recent_activity_count", 0)
+    stats.setdefault("last_activity", None)
     return stats
 
 
@@ -219,3 +224,52 @@ def live_device_stats(data: dict) -> dict:
             result["virtual_polls_per_min"] = round((stats.get("virtual_polls", 0) / uptime) * 60, 2)
 
     return result
+def _activity_value(device: dict | None):
+    if not device:
+        return None
+    if device.get("status") not in (None, ""):
+        return device.get("status")
+    if device.get("numeric_value") is not None:
+        return device.get("numeric_value")
+    return device.get("value")
+
+
+def _activity_name(device: dict | None, ref) -> str:
+    if not device:
+        return f"HomeSeer Ref {ref}"
+    parts = [device.get("location2"), device.get("location"), device.get("name")]
+    name = " ".join(str(p).strip() for p in parts if p)
+    return name or f"HomeSeer Ref {ref}"
+
+
+def record_recent_activity(data: dict, ref, old_device: dict | None, new_device: dict | None, source: str) -> None:
+    """Record a compact recent activity event for dashboards and diagnostics."""
+    stats = ensure_stats(data)
+    old_value = _activity_value(old_device)
+    new_value = _activity_value(new_device)
+
+    # Avoid noise where the caller detected only metadata changes.
+    if old_value == new_value and old_device is not None:
+        old_name = _activity_name(old_device, ref)
+        new_name = _activity_name(new_device, ref)
+        if old_name == new_name:
+            return
+
+    event = {
+        "timestamp": time(),
+        "ref": ref,
+        "name": _activity_name(new_device or old_device, ref),
+        "source": source,
+        "old": old_value,
+        "new": new_value,
+    }
+
+    activity = list(stats.get("recent_activity") or [])
+    activity.insert(0, event)
+    del activity[MAX_RECENT_ACTIVITY:]
+    stats["recent_activity"] = activity
+    stats["recent_activity_count"] = stats.get("recent_activity_count", 0) + 1
+
+    old_text = "" if old_value is None else str(old_value)
+    new_text = "" if new_value is None else str(new_value)
+    stats["last_activity"] = f"{event['name']}: {old_text} → {new_text}".strip()

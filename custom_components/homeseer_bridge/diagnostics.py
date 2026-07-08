@@ -113,6 +113,9 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
             "last_api_refresh_timestamp": _iso(stats.get("last_api_refresh_timestamp")),
             "last_virtual_poll_timestamp": _iso(stats.get("last_virtual_poll_timestamp")),
             "integration_started_timestamp": _iso(stats.get("integration_started_timestamp")),
+            "recent_activity_count": stats.get("recent_activity_count"),
+            "last_activity": stats.get("last_activity"),
+            "recent_activity": stats.get("recent_activity") or [],
         },
         "breakdowns": {
             "interfaces": _count_by(state, "interface"),
