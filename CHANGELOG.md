@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.5.0
+
+- Adds Repairs Prep engine with structured repair candidates, sensors, dashboard YAML, and diagnostics.
+
+
 ## v3.4.0
 
 - Adds Device Explorer Prep metrics and diagnostics for active, filtered, and recently changed refs.

@@ -1,5 +1,15 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.0
+
+- Adds Repairs Prep engine.
+- Exposes structured repair candidates through sensors and diagnostics.
+- Detects API health issues, high API latency, unmatched MQTT topics, stale MQTT activity, unknown categories, missing proposed areas, noisy filtered refs, and high-activity refs.
+- Adds Repairs Health Score and repair count sensors.
+- Adds Repairs Prep dashboard YAML.
+- This version does not create native Home Assistant Repairs yet.
+
+
 ## v3.4.0
 
 - Adds Device Explorer Prep metrics.
