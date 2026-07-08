@@ -373,42 +373,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
             )
 
+    async def handle_create_dashboard(call: ServiceCall):
+        created = await async_ensure_dashboard(hass)
+        _LOGGER.info("HomeSeer Bridge dashboard create service completed; created=%s", created)
 
-async def handle_create_dashboard(call: ServiceCall):
-    created = await async_ensure_dashboard(hass)
-    _LOGGER.info("HomeSeer Bridge dashboard create service completed; created=%s", created)
-
-async def handle_apply_suggested_areas(call: ServiceCall):
-    dry_run = bool(call.data.get("dry_run", True))
-    overwrite = bool(call.data.get("overwrite", False))
-    limit = call.data.get("limit")
-    limit = int(limit) if limit is not None else None
-    result = await async_apply_suggested_areas(
-        hass,
-        entry.entry_id,
-        dry_run=dry_run,
-        overwrite=overwrite,
-        limit=limit,
-    )
-    _LOGGER.info("HomeSeer Bridge area apply result: %s", result)
-
-async def handle_reload_devices(call: ServiceCall):
-    fresh_state = await api.async_get_status()
-    data = hass.data[DOMAIN][entry.entry_id]
-    data["state"].update(fresh_state)
-    data["topic_lookup"] = build_topic_lookup(data["state"], entry)
-    data["virtual_refs"] = {ref for ref, device in data["state"].items() if _is_virtual_device(device)}
-    data["stats"]["manual_reloads"] += 1
-    data["stats"]["last_refresh_devices"] = len(fresh_state)
-    data["stats"]["virtual_devices"] = len(data["virtual_refs"])
-    data["stats"]["last_api_ok"] = True
-    data["stats"]["consecutive_api_failures"] = 0
-    data["reload_scheduled"] = False
-    for ref in fresh_state:
-        hass.loop.call_soon_threadsafe(
-            async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
+    async def handle_apply_suggested_areas(call: ServiceCall):
+        dry_run = bool(call.data.get("dry_run", True))
+        overwrite = bool(call.data.get("overwrite", False))
+        limit = call.data.get("limit")
+        limit = int(limit) if limit is not None else None
+        result = await async_apply_suggested_areas(
+            hass,
+            entry.entry_id,
+            dry_run=dry_run,
+            overwrite=overwrite,
+            limit=limit,
         )
-    _LOGGER.info("Manual HomeSeer device reload completed; devices=%s cached=%s virtual=%s", len(fresh_state), len(data["state"]), len(data["virtual_refs"]))
+        _LOGGER.info("HomeSeer Bridge area apply result: %s", result)
+
+    async def handle_reload_devices(call: ServiceCall):
+        fresh_state = await api.async_get_status()
+        data = hass.data[DOMAIN][entry.entry_id]
+        data["state"].update(fresh_state)
+        data["topic_lookup"] = build_topic_lookup(data["state"], entry)
+        data["virtual_refs"] = {ref for ref, device in data["state"].items() if _is_virtual_device(device)}
+        data["stats"]["manual_reloads"] += 1
+        data["stats"]["last_refresh_devices"] = len(fresh_state)
+        data["stats"]["virtual_devices"] = len(data["virtual_refs"])
+        data["stats"]["last_api_ok"] = True
+        data["stats"]["consecutive_api_failures"] = 0
+        data["reload_scheduled"] = False
+        for ref in fresh_state:
+            hass.loop.call_soon_threadsafe(
+                async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
+            )
+        _LOGGER.info("Manual HomeSeer device reload completed; devices=%s cached=%s virtual=%s", len(fresh_state), len(data["state"]), len(data["virtual_refs"]))
 
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH_ALL):
         hass.services.async_register(DOMAIN, SERVICE_REFRESH_ALL, handle_refresh_all)
@@ -434,7 +433,7 @@ async def handle_reload_devices(call: ServiceCall):
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v3.2.1 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v3.2.2 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

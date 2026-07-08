@@ -1,18 +1,12 @@
 # HomeSeer Home Assistant Bridge
 
-## v3.2.1
+## v3.2.2
 
-- Fixes v3.2.0 setup regression where `async_setup_entry` did not return a boolean because the new area apply service handler was inserted at the wrong indentation level.
-- No feature changes from v3.2.0.
-
-
-## v3.2.0
-
+- Rebuilds Auto Area Apply from the stable v3.1.1 base.
 - Adds manual `homeseer_bridge.apply_suggested_areas` service.
-- Service is dry-run by default and uses Auto Area Prep mappings from HomeSeer `location2` and `location`.
+- Dry-run is enabled by default.
 - Skips devices already assigned to an area unless `overwrite: true` is used.
-- Creates missing Home Assistant Areas only when run with `dry_run: false`.
-- Adds last area apply result sensors, diagnostics, and optional dashboard YAML.
+- Fixes the v3.2.0/v3.2.1 setup handler indentation regression.
 
 
 A custom Home Assistant integration that bridges **HomeSeer HS4** devices into Home Assistant using the HomeSeer JSON API for discovery/control and **mcsMQTT** for fast state updates.

@@ -72,18 +72,17 @@ async def async_apply_suggested_areas(
             continue
 
         area_entry = area_reg.async_get_area_by_name(proposed_area)
+        would_create_area = area_entry is None
+
         if area_entry is None:
             if dry_run:
                 area_id = None
-                would_create_area = True
             else:
                 area_entry = area_reg.async_create(proposed_area)
                 area_id = area_entry.id
                 created_areas.add(proposed_area)
-                would_create_area = False
         else:
             area_id = area_entry.id
-            would_create_area = False
 
         record = {
             "ref": ref,

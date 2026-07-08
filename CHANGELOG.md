@@ -1,15 +1,10 @@
 # Changelog
 
-## v3.2.1
+## v3.2.2
 
-- Fixes `async_setup_entry did not return boolean` caused by a misplaced service handler in v3.2.0.
-- No feature changes.
-
-
-## v3.2.0
-
-- Adds manual dry-run-first Auto Area Apply service.
-- Adds area apply diagnostics and dashboard snippet.
+- Rebuilt from stable v3.1.1.
+- Adds Auto Area Apply service safely.
+- Fixes setup handler indentation regression from v3.2.0/v3.2.1.
 
 
 ## v3.1.1
