@@ -1,5 +1,36 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.4
+
+- Fixes Auto Area dashboard entity resolution by adding explicit suggested object IDs for Auto Area Prep and Auto Area Apply monitor sensors.
+- Keeps the v3.5.2 cached Repairs Prep performance fix.
+
+
+## v3.5.3
+
+- Fixes dashboard `Entity not found` warnings for Auto Area Prep and Auto Area Apply cards.
+- Adds the missing monitor sensors used by existing dashboard YAML.
+- Keeps the v3.5.2 cached Repairs Prep performance fix.
+
+
+## v3.5.2
+
+- Rebuilds Repairs Prep from the stable v3.4.0 base.
+- Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
+- Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
+- Adds repair candidate sensors and diagnostics using cached data.
+- Designed for large HomeSeer installs to avoid Home Assistant event-loop stalls.
+
+
+## v3.4.0
+
+- Adds Device Explorer Prep metrics.
+- Tracks per-ref visible activity counts.
+- Tracks per-ref filtered/noisy activity counts.
+- Adds top active refs, top filtered refs, and recently changed refs to sensor attributes and diagnostics.
+- Adds Device Explorer Prep dashboard YAML.
+
+
 ## v3.3.0
 
 - Adds Recent Activity filtering.

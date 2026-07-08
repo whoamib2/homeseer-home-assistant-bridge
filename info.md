@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Version 3.3.0 adds Recent Activity filtering for noisy devices such as Utility/Jon00 monitor devices.
+Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Version 3.5.4 fixes Auto Area dashboard entity IDs with explicit suggested object IDs while keeping cached Repairs Prep.
