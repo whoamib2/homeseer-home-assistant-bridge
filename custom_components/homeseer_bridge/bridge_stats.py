@@ -36,16 +36,6 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("recent_activity", [])
     stats.setdefault("recent_activity_count", 0)
     stats.setdefault("recent_activity_filtered_count", 0)
-    stats.setdefault("activity_ref_counts", {})
-    stats.setdefault("filtered_activity_ref_counts", {})
-    stats.setdefault("last_activity_by_ref", {})
-    stats.setdefault("cached_repairs_report", None)
-    stats.setdefault("cached_repairs_report_timestamp", None)
-    stats.setdefault("repairs_total_candidates", 0)
-    stats.setdefault("repairs_critical_count", 0)
-    stats.setdefault("repairs_warning_count", 0)
-    stats.setdefault("repairs_info_count", 0)
-    stats.setdefault("repairs_health_score", None)
     stats.setdefault("last_activity", None)
     return stats
 
@@ -269,21 +259,6 @@ def _activity_is_excluded(data: dict, old_device: dict | None, new_device: dict 
     text = f"{_activity_text(old_device)} {_activity_text(new_device)}"
     return any(term in text for term in terms)
 
-
-def _increment_ref_count(stats: dict, key: str, ref) -> None:
-    ref_key = str(ref)
-    counts = stats.setdefault(key, {})
-    counts[ref_key] = int(counts.get(ref_key, 0)) + 1
-
-
-def _top_ref_counts(stats: dict, key: str, limit: int = 20) -> list[dict]:
-    counts = stats.get(key) or {}
-    return [
-        {"ref": ref, "count": count}
-        for ref, count in sorted(counts.items(), key=lambda item: item[1], reverse=True)[:limit]
-    ]
-
-
 def _activity_value(device: dict | None):
     if not device:
         return None
@@ -307,7 +282,6 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
     stats = ensure_stats(data)
     if _activity_is_excluded(data, old_device, new_device):
         stats["recent_activity_filtered_count"] = stats.get("recent_activity_filtered_count", 0) + 1
-        _increment_ref_count(stats, "filtered_activity_ref_counts", ref)
         return
     old_value = _activity_value(old_device)
     new_value = _activity_value(new_device)
@@ -337,68 +311,7 @@ def record_recent_activity(data: dict, ref, old_device: dict | None, new_device:
     old_text = "" if old_value is None else str(old_value)
     new_text = "" if new_value is None else str(new_value)
     stats["last_activity"] = f"{event['name']}: {old_text} → {new_text}".strip()
-    _increment_ref_count(stats, "activity_ref_counts", ref)
-    stats.setdefault("last_activity_by_ref", {})[str(ref)] = event
 def smart_model_stats(data: dict) -> dict:
     return summarize_models(data.get("state") or {})
 def area_floor_stats(data: dict) -> dict:
     return area_floor_summary(data.get("state") or {})
-def _enrich_ref_entries(state: dict, entries: list[dict]) -> list[dict]:
-    enriched = []
-    for entry in entries:
-        ref = entry.get("ref")
-        device = state.get(ref) or state.get(int(ref)) if str(ref).isdigit() else state.get(ref)
-        if device is None and str(ref).isdigit():
-            device = state.get(int(ref))
-        model = None
-        if device is not None:
-            try:
-                from .device_model import model_dict
-                model = model_dict(device, int(ref) if str(ref).isdigit() else ref)
-            except Exception:
-                model = None
-        enriched.append({
-            **entry,
-            "name": _activity_name(device, ref),
-            "location": device.get("location") if device else None,
-            "location2": device.get("location2") if device else None,
-            "status": device.get("status") if device else None,
-            "value": device.get("value") if device else None,
-            "category": (model or {}).get("category"),
-            "confidence": (model or {}).get("confidence"),
-        })
-    return enriched
-
-
-def device_explorer_stats(data: dict) -> dict:
-    """Return dashboard/diagnostics friendly device explorer prep summary."""
-    stats = ensure_stats(data)
-    state = data.get("state") or {}
-    recent = stats.get("recent_activity") or []
-    recent_refs = []
-    seen = set()
-    for event in recent:
-        ref = str(event.get("ref"))
-        if ref in seen:
-            continue
-        seen.add(ref)
-        recent_refs.append({"ref": ref, "last_event": event})
-        if len(recent_refs) >= 20:
-            break
-
-    active = _enrich_ref_entries(state, _top_ref_counts(stats, "activity_ref_counts", 20))
-    noisy_filtered = _enrich_ref_entries(state, _top_ref_counts(stats, "filtered_activity_ref_counts", 20))
-    recent_enriched = []
-    for item in recent_refs:
-        ref = item["ref"]
-        base = _enrich_ref_entries(state, [{"ref": ref, "count": 1}])[0]
-        base["last_event"] = item["last_event"]
-        recent_enriched.append(base)
-
-    return {
-        "tracked_refs": len(stats.get("activity_ref_counts") or {}),
-        "filtered_tracked_refs": len(stats.get("filtered_activity_ref_counts") or {}),
-        "top_active_refs": active,
-        "top_filtered_refs": noisy_filtered,
-        "recently_changed_refs": recent_enriched,
-    }

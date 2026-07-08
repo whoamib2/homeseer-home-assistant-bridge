@@ -13,8 +13,7 @@ from .helpers import (
     sensor_device_class,
     unit_of_measurement,
 )
-from .repairs_engine import get_cached_repairs_report
-from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
+from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -119,15 +118,6 @@ MONITOR_SENSORS = [
     ("recent_activity", "HomeSeer Bridge Recent Activity", None),
     ("recent_activity_count", "HomeSeer Bridge Recent Activity Count", None),
     ("recent_activity_filtered_count", "HomeSeer Bridge Recent Activity Filtered Count", None),
-    ("device_explorer_tracked_refs", "HomeSeer Bridge Explorer Tracked Refs", None),
-    ("device_explorer_filtered_refs", "HomeSeer Bridge Explorer Filtered Refs", None),
-    ("device_explorer_top_active_count", "HomeSeer Bridge Explorer Top Active Count", None),
-    ("device_explorer_top_filtered_count", "HomeSeer Bridge Explorer Top Filtered Count", None),
-    ("repairs_total_candidates", "HomeSeer Bridge Repair Candidates", None),
-    ("repairs_critical_count", "HomeSeer Bridge Critical Repairs", None),
-    ("repairs_warning_count", "HomeSeer Bridge Repair Warnings", None),
-    ("repairs_info_count", "HomeSeer Bridge Repair Info", None),
-    ("repairs_health_score", "HomeSeer Bridge Repairs Health Score", '%'),
     ("model_lights", "HomeSeer Bridge Model Lights", None),
     ("model_switches", "HomeSeer Bridge Model Switches", None),
     ("model_sensors", "HomeSeer Bridge Model Sensors", None),
@@ -138,13 +128,6 @@ MONITOR_SENSORS = [
     ("model_climate", "HomeSeer Bridge Model Climate", None),
     ("model_other", "HomeSeer Bridge Model Other", None),
     ("model_average_confidence", "HomeSeer Bridge Model Average Confidence", '%'),
-    ("area_prep_area_count", "HomeSeer Bridge Proposed Areas", None),
-    ("area_prep_floor_count", "HomeSeer Bridge Proposed Floors", None),
-    ("area_prep_room_count", "HomeSeer Bridge Proposed Rooms", None),
-    ("area_prep_top_area_devices", "HomeSeer Bridge Largest Proposed Area Devices", None),
-    ("area_prep_top_floor_devices", "HomeSeer Bridge Largest Proposed Floor Devices", None),
-    ("area_apply_last_changed", "HomeSeer Bridge Last Area Apply Changed", None),
-    ("area_apply_last_skipped", "HomeSeer Bridge Last Area Apply Skipped", None),
 ]
 
 
@@ -224,30 +207,6 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "area_apply_last_skipped":
             return stats.get("last_area_apply_skipped", 0)
 
-        explorer = device_explorer_stats(data)
-        if self.key == "device_explorer_tracked_refs":
-            return explorer.get("tracked_refs", 0)
-        if self.key == "device_explorer_filtered_refs":
-            return explorer.get("filtered_tracked_refs", 0)
-        if self.key == "device_explorer_top_active_count":
-            top = explorer.get("top_active_refs") or []
-            return top[0].get("count", 0) if top else 0
-        if self.key == "device_explorer_top_filtered_count":
-            top = explorer.get("top_filtered_refs") or []
-            return top[0].get("count", 0) if top else 0
-
-        report = get_cached_repairs_report(data)
-        if self.key == "repairs_total_candidates":
-            return report.get("total_candidates", 0)
-        if self.key == "repairs_critical_count":
-            return report.get("critical_count", 0)
-        if self.key == "repairs_warning_count":
-            return report.get("warning_count", 0)
-        if self.key == "repairs_info_count":
-            return report.get("info_count", 0)
-        if self.key == "repairs_health_score":
-            return report.get("repair_health_score")
-
         return stats.get(self.key)
 
     @property
@@ -277,19 +236,4 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             attrs["area_floor_summary"] = area_floor_stats(data)
         if self.key in {"area_apply_last_changed", "area_apply_last_skipped"}:
             attrs["last_area_apply"] = stats.get("last_area_apply")
-        if self.key in {
-            "device_explorer_tracked_refs",
-            "device_explorer_filtered_refs",
-            "device_explorer_top_active_count",
-            "device_explorer_top_filtered_count",
-        }:
-            attrs["device_explorer"] = device_explorer_stats(data)
-        if self.key in {
-            "repairs_total_candidates",
-            "repairs_critical_count",
-            "repairs_warning_count",
-            "repairs_info_count",
-            "repairs_health_score",
-        }:
-            attrs["repairs_report"] = get_cached_repairs_report(data)
         return attrs

@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Version 3.5.3 fixes missing Auto Area dashboard monitor sensors while keeping cached Repairs Prep.
+Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Version 3.3.0 adds Recent Activity filtering for noisy devices such as Utility/Jon00 monitor devices.
