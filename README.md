@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.2
+
+- Rebuilds Repairs Prep from the stable v3.4.0 base.
+- Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
+- Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
+- Adds repair candidate sensors and diagnostics using cached data.
+- Designed for large HomeSeer installs to avoid Home Assistant event-loop stalls.
+
+
 ## v3.4.0
 
 - Adds Device Explorer Prep metrics.

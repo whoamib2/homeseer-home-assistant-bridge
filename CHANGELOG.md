@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.5.2
+
+- Adds cached Repairs Prep from stable v3.4.0.
+- Avoids expensive repair calculations during sensor state reads.
+
+
 ## v3.4.0
 
 - Adds Device Explorer Prep metrics and diagnostics for active, filtered, and recently changed refs.

@@ -3,8 +3,10 @@ from __future__ import annotations
 from time import time
 from typing import Any
 
-from .bridge_stats import ensure_stats, health_score, device_explorer_stats
-from .device_model import classify_device, area_floor_summary
+from .bridge_stats import ensure_stats, health_score
+
+
+DEFAULT_REPAIRS_CACHE_SECONDS = 60
 
 
 def _candidate(
@@ -28,43 +30,49 @@ def _candidate(
     }
 
 
-def _missing_area_refs(state: dict, limit: int = 50) -> list:
-    refs = []
-    for ref, device in state.items():
-        model = classify_device(device, ref)
-        if not model.suggested_area or model.suggested_area == "Unknown":
-            refs.append(ref)
-        if len(refs) >= limit:
-            break
-    return refs
-
-
-def _unknown_category_refs(state: dict, limit: int = 50) -> list:
-    refs = []
-    for ref, device in state.items():
-        model = classify_device(device, ref)
-        if model.category == "other" or model.confidence < 50:
-            refs.append(ref)
-        if len(refs) >= limit:
-            break
-    return refs
-
-
-def repairs_report(data: dict) -> dict[str, Any]:
-    """Build a safe repair-candidate report.
-
-    This does not create Home Assistant Repair entries yet. It only exposes
-    structured candidates through sensors and diagnostics.
-    """
-    state = data.get("state") or {}
+def _safe_get_cached_report(data: dict) -> dict[str, Any]:
     stats = ensure_stats(data)
-    unmatched = data.get("unmatched_topics") or {}
-    explorer = device_explorer_stats(data)
-    area_summary = area_floor_summary(state)
+    return stats.get("cached_repairs_report") or {
+        "generated_at": None,
+        "repair_health_score": health_score(data),
+        "total_candidates": 0,
+        "critical_count": 0,
+        "warning_count": 0,
+        "info_count": 0,
+        "critical": [],
+        "warnings": [],
+        "info": [],
+        "cached": True,
+    }
 
-    critical = []
-    warnings = []
-    info = []
+
+def get_cached_repairs_report(data: dict) -> dict[str, Any]:
+    """Return the cached repairs report only.
+
+    This is safe to call from entity properties because it does not scan all
+    HomeSeer devices or touch registries.
+    """
+    return _safe_get_cached_report(data)
+
+
+def update_cached_repairs_report(data: dict, *, force: bool = False) -> dict[str, Any]:
+    """Recompute the repairs report at most once per cache interval.
+
+    This is intentionally lightweight and capped so large HomeSeer installs do
+    not block Home Assistant's event loop.
+    """
+    stats = ensure_stats(data)
+    now = time()
+    last = stats.get("cached_repairs_report_timestamp")
+
+    if not force and last and now - float(last) < DEFAULT_REPAIRS_CACHE_SECONDS:
+        return _safe_get_cached_report(data)
+
+    state = data.get("state") or {}
+    unmatched = data.get("unmatched_topics") or {}
+    critical: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    info: list[dict[str, Any]] = []
 
     if not stats.get("last_api_ok", True):
         critical.append(_candidate(
@@ -116,84 +124,96 @@ def repairs_report(data: dict) -> dict[str, Any]:
             data={"last_mqtt_age_seconds": last_mqtt_age},
         ))
 
-    unknown_refs = _unknown_category_refs(state)
-    if unknown_refs:
+    # Reuse already-cached/counted explorer data from v3.4.0. Do not rebuild it here.
+    filtered_counts = stats.get("filtered_activity_ref_counts") or {}
+    active_counts = stats.get("activity_ref_counts") or {}
+
+    top_filtered = sorted(filtered_counts.items(), key=lambda item: item[1], reverse=True)[:20]
+    if top_filtered and int(top_filtered[0][1]) >= 10:
         info.append(_candidate(
-            "unknown_device_category",
+            "noisy_filtered_refs",
             "info",
-            "Devices with unknown or low-confidence category",
-            "Some HomeSeer devices could not be confidently classified by the Smart Device Model.",
-            count=len(unknown_refs),
-            refs=unknown_refs,
+            "Noisy filtered activity refs",
+            "Some refs are generating many filtered activity events.",
+            count=len(top_filtered),
+            refs=[ref for ref, _count in top_filtered],
+            data={"top_filtered_refs": [{"ref": ref, "count": count} for ref, count in top_filtered]},
         ))
 
-    missing_area_refs = _missing_area_refs(state)
+    top_active = sorted(active_counts.items(), key=lambda item: item[1], reverse=True)[:20]
+    if top_active and int(top_active[0][1]) >= 25:
+        info.append(_candidate(
+            "high_activity_refs",
+            "info",
+            "High activity devices",
+            "Some HomeSeer refs are changing frequently.",
+            count=len(top_active),
+            refs=[ref for ref, _count in top_active],
+            data={"top_active_refs": [{"ref": ref, "count": count} for ref, count in top_active]},
+        ))
+
+    # Extremely cheap area/category sampling only. Capped to avoid blocking on huge installs.
+    missing_area_refs = []
+    unknownish_refs = []
+    checked = 0
+    for ref, device in state.items():
+        checked += 1
+        if checked > 250:
+            break
+        text = " ".join(
+            str(device.get(key) or "")
+            for key in ("name", "location", "location2", "device_type", "device_type_string", "interface", "interface_name")
+        ).lower()
+        if not (device.get("location") or device.get("location2")):
+            missing_area_refs.append(ref)
+        if not text.strip() or "unknown" in text:
+            unknownish_refs.append(ref)
+
     if missing_area_refs:
         info.append(_candidate(
-            "missing_proposed_area",
+            "missing_location_sample",
             "info",
-            "Devices without proposed area",
-            "Some HomeSeer devices do not have enough location data to propose a Home Assistant area.",
+            "Devices missing HomeSeer location data",
+            "A sample of devices did not have HomeSeer location/location2 data for area mapping.",
             count=len(missing_area_refs),
-            refs=missing_area_refs,
+            refs=missing_area_refs[:50],
+            data={"sampled_devices": checked},
         ))
 
-    top_filtered = explorer.get("top_filtered_refs") or []
-    if top_filtered:
-        noisiest = top_filtered[0]
-        if int(noisiest.get("count") or 0) >= 10:
-            info.append(_candidate(
-                "noisy_filtered_refs",
-                "info",
-                "Noisy filtered activity refs",
-                "Some refs are generating many filtered activity events.",
-                count=len(top_filtered),
-                refs=[item.get("ref") for item in top_filtered[:20]],
-                data={"top_filtered_refs": top_filtered[:20]},
-            ))
+    if unknownish_refs:
+        info.append(_candidate(
+            "unknown_device_sample",
+            "info",
+            "Devices with unknown-looking metadata",
+            "A sample of devices had unknown or sparse metadata.",
+            count=len(unknownish_refs),
+            refs=unknownish_refs[:50],
+            data={"sampled_devices": checked},
+        ))
 
-    top_active = explorer.get("top_active_refs") or []
-    if top_active:
-        busiest = top_active[0]
-        if int(busiest.get("count") or 0) >= 25:
-            info.append(_candidate(
-                "high_activity_refs",
-                "info",
-                "High activity devices",
-                "Some HomeSeer refs are changing frequently.",
-                count=len(top_active),
-                refs=[item.get("ref") for item in top_active[:20]],
-                data={"top_active_refs": top_active[:20]},
-            ))
-
-    total_candidates = len(critical) + len(warnings) + len(info)
-    score = health_score(data)
-    if critical:
-        repair_health = max(0, score - 30)
-    elif warnings:
-        repair_health = max(0, score - 10)
-    else:
-        repair_health = score
+    total = len(critical) + len(warnings) + len(info)
+    base_health = health_score(data)
+    repair_health = max(0, base_health - 30) if critical else max(0, base_health - 10) if warnings else base_health
 
     report = {
-        "generated_at": time(),
+        "generated_at": now,
         "repair_health_score": repair_health,
-        "total_candidates": total_candidates,
+        "total_candidates": total,
         "critical_count": len(critical),
         "warning_count": len(warnings),
         "info_count": len(info),
         "critical": critical,
         "warnings": warnings,
         "info": info,
-        "area_summary": {
-            "area_count": area_summary.get("area_count"),
-            "floor_count": area_summary.get("floor_count"),
-            "room_count": area_summary.get("room_count"),
-        },
+        "cached": True,
+        "cache_seconds": DEFAULT_REPAIRS_CACHE_SECONDS,
+        "sampled_devices": min(len(state), 250),
+        "total_devices": len(state),
     }
 
-    stats["last_repairs_report"] = report
-    stats["repairs_total_candidates"] = total_candidates
+    stats["cached_repairs_report"] = report
+    stats["cached_repairs_report_timestamp"] = now
+    stats["repairs_total_candidates"] = total
     stats["repairs_critical_count"] = len(critical)
     stats["repairs_warning_count"] = len(warnings)
     stats["repairs_info_count"] = len(info)
