@@ -1,16 +1,14 @@
 # Changelog
 
+## v3.5.3
+
+- Fixes missing Auto Area Prep/Apply monitor sensors referenced by dashboard YAML.
+
+
 ## v3.5.2
 
-- Built from v3.4.1 Activity Safety Fix.
-- Adds cached Repairs Prep without sensor-time report recalculation.
-
-
-## v3.4.1
-
-- Caps recent activity to 10 events.
-- Truncates activity event names and values.
-- Reduces Live Event Viewer dashboard payload size.
+- Adds cached Repairs Prep from stable v3.4.0.
+- Avoids expensive repair calculations during sensor state reads.
 
 
 ## v3.4.0

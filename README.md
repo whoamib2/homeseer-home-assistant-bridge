@@ -1,20 +1,19 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.5.3
+
+- Fixes dashboard `Entity not found` warnings for Auto Area Prep and Auto Area Apply cards.
+- Adds the missing monitor sensors used by existing dashboard YAML.
+- Keeps the v3.5.2 cached Repairs Prep performance fix.
+
+
 ## v3.5.2
 
-- Built from v3.4.1 Activity Safety Fix.
-- Keeps capped/truncated recent activity payloads.
+- Rebuilds Repairs Prep from the stable v3.4.0 base.
 - Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
 - Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
-
-
-## v3.4.1
-
-- Activity Safety Fix built from stable v3.4.0.
-- Caps recent activity history to 10 events.
-- Truncates activity names and old/new values to prevent large dashboard payloads.
-- Keeps sensor attributes small so the Activity/Live Event Viewer dashboard does not stall Home Assistant.
-- No Repairs Prep changes included.
+- Adds repair candidate sensors and diagnostics using cached data.
+- Designed for large HomeSeer installs to avoid Home Assistant event-loop stalls.
 
 
 ## v3.4.0

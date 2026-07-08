@@ -7,16 +7,16 @@
       heading: Live Event Viewer
 
     - type: markdown
-      title: Last 10 HomeSeer Changes
+      title: Last 25 HomeSeer Changes
       content: >-
         {% set events = state_attr('sensor.homeseer_bridge_recent_activity', 'events') or [] %}
         {% if events | count == 0 %}
         No recent HomeSeer activity has been recorded yet.
         {% else %}
-        {% for e in events[:10] %}
+        {% for e in events[:25] %}
         **{{ e.name }}**  
-`{{ e.source | upper }}` · Ref `{{ e.ref }}` · {{ e.timestamp | timestamp_custom('%I:%M:%S %p', true) }}  
-{{ e.old if e.old is not none else 'unknown' }} → **{{ e.new if e.new is not none else 'unknown' }}**
+        `{{ e.source | upper }}` · Ref `{{ e.ref }}` · {{ e.timestamp | timestamp_custom('%I:%M:%S %p', true) }}  
+        {{ e.old if e.old is not none else 'unknown' }} → **{{ e.new if e.new is not none else 'unknown' }}**
 
         ---
         {% endfor %}

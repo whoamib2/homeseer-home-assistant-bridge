@@ -1,5 +1,5 @@
 # Optional v3.5.2 Cached Repairs Prep section.
-# Built from v3.4.1 Activity Safety Fix.
+# This exposes cached repair candidates only. It does not create native HA Repairs yet.
 
 - type: grid
   cards:
@@ -18,3 +18,10 @@
           name: Warnings
         - entity: sensor.homeseer_bridge_repair_info
           name: Info
+    - type: markdown
+      title: Repair Details
+      content: >-
+        Repair reports are cached and safe for large HomeSeer installs.
+
+        Open Developer Tools → States and select one of the Repairs sensors.
+        The `repairs_report` attribute contains cached repair candidates.
