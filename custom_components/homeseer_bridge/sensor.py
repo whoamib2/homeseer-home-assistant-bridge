@@ -14,6 +14,7 @@ from .helpers import (
     unit_of_measurement,
 )
 from .repairs_engine import get_cached_repairs_report
+from .safe_summary import compact_area_floor_summary, compact_device_explorer_summary, compact_repairs_report, compact_activity_events, compact_area_apply
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
 
 
@@ -273,8 +274,8 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "reconnect_successes": stats.get("reconnect_successes"),
         }
         if self.key == "recent_activity":
-            attrs["events"] = stats.get("recent_activity") or []
-            attrs["activity_excluded_terms"] = data.get("activity_excluded_terms") or []
+            attrs["events"] = compact_activity_events(stats.get("recent_activity") or [])
+            attrs["activity_excluded_terms"] = (data.get("activity_excluded_terms") or [])[:20]
             attrs["filtered_count"] = stats.get("recent_activity_filtered_count", 0)
         if self.key == "model_average_confidence":
             attrs["model_summary"] = smart_model_stats(data)
@@ -285,16 +286,16 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "area_prep_top_area_devices",
             "area_prep_top_floor_devices",
         }:
-            attrs["area_floor_summary"] = area_floor_stats(data)
+            attrs["area_floor_summary"] = compact_area_floor_summary(area_floor_stats(data))
         if self.key in {"area_apply_last_changed", "area_apply_last_skipped"}:
-            attrs["last_area_apply"] = stats.get("last_area_apply")
+            attrs["last_area_apply"] = compact_area_apply(stats.get("last_area_apply"))
         if self.key in {
             "device_explorer_tracked_refs",
             "device_explorer_filtered_refs",
             "device_explorer_top_active_count",
             "device_explorer_top_filtered_count",
         }:
-            attrs["device_explorer"] = device_explorer_stats(data)
+            attrs["device_explorer"] = compact_device_explorer_summary(device_explorer_stats(data))
         if self.key in {
             "repairs_total_candidates",
             "repairs_critical_count",
@@ -302,5 +303,5 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "repairs_info_count",
             "repairs_health_score",
         }:
-            attrs["repairs_report"] = get_cached_repairs_report(data)
+            attrs["repairs_report"] = compact_repairs_report(get_cached_repairs_report(data))
         return attrs

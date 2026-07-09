@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.6.0
+
+- Adds recorder-safe compact sensor attributes.
+- Caps dashboard sensor attributes so large HomeSeer installs do not exceed Home Assistant's 16 KB recorder attribute limit.
+- Moves detailed Auto Area, Device Explorer, Repairs, and Recent Activity data to diagnostics instead of entity attributes.
+- Keeps dashboards functional while avoiding oversized state serialization.
+- Keeps v3.5.x cached Repairs Prep and Auto Area entity ID fixes.
+
+
 ## v3.5.4
 
 - Fixes Auto Area dashboard entity resolution by adding explicit suggested object IDs for Auto Area Prep and Auto Area Apply monitor sensors.

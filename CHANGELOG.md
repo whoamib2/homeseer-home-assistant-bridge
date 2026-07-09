@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.6.0
+
+- Adds recorder-safe compact/capped sensor attributes.
+- Prevents Auto Area, Device Explorer, Repairs, and Activity sensors from exposing huge attribute payloads.
+- Full reports remain available through diagnostics.
+
+
 ## v3.5.4
 
 - Adds explicit suggested object IDs for Auto Area dashboard monitor sensors.
