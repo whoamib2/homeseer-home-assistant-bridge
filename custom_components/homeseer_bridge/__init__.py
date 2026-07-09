@@ -35,6 +35,7 @@ from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to
 from .dashboard import async_ensure_dashboard
 from .area_apply import async_apply_suggested_areas
 from .repairs_engine import update_cached_repairs_report
+from .analytics_cache import update_cached_analytics
 from .bridge_stats import ensure_stats, mark_mqtt_update, record_latency_ms, refresh_derived_stats, mark_api_refresh, mark_virtual_poll, record_recent_activity
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,6 +142,7 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
         async_dispatcher_send(hass, f"{SIGNAL_NEW_DEVICES}_{entry.entry_id}", new_refs)
 
     update_cached_repairs_report(data)
+    update_cached_analytics(data)
 
     for ref in changed_refs:
         hass.loop.call_soon_threadsafe(
@@ -255,6 +257,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     ensure_stats(hass.data[DOMAIN][entry.entry_id])
     update_cached_repairs_report(hass.data[DOMAIN][entry.entry_id], force=True)
+    update_cached_analytics(hass.data[DOMAIN][entry.entry_id], force=True)
     hass.data[DOMAIN][entry.entry_id]["stats"]["last_api_refresh_timestamp"] = hass.data[DOMAIN][entry.entry_id]["stats"].get("last_api_refresh_timestamp")
 
     hass.async_create_task(async_ensure_dashboard(hass))
@@ -419,6 +422,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data["stats"]["last_api_ok"] = True
         data["stats"]["consecutive_api_failures"] = 0
         data["reload_scheduled"] = False
+        update_cached_analytics(data, force=True)
         for ref in fresh_state:
             hass.loop.call_soon_threadsafe(
                 async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
@@ -449,7 +453,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v3.5.2 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v3.6.1 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

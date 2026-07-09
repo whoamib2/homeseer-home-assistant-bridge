@@ -46,6 +46,8 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("repairs_warning_count", 0)
     stats.setdefault("repairs_info_count", 0)
     stats.setdefault("repairs_health_score", None)
+    stats.setdefault("analytics_cache", None)
+    stats.setdefault("analytics_cache_timestamp", None)
     stats.setdefault("last_activity", None)
     return stats
 

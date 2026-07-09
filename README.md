@@ -1,5 +1,13 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.6.1
+
+- Adds cached analytics for Live Intelligence, Smart Device Model, Auto Area, Device Explorer, and Repairs.
+- Sensor values and attributes now read cached data instead of scanning thousands of HomeSeer devices during state updates.
+- Reduces Home Assistant event-loop blocking and `Updating state took ... seconds` warnings on large installs.
+- Keeps v3.6.0 recorder-safe compact attributes.
+
+
 ## v3.6.0
 
 - Adds recorder-safe compact sensor attributes.

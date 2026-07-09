@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.6.1
+
+- Adds cached analytics layer for heavy dashboard calculations.
+- Prevents model/area/explorer/repair sensors from scanning all devices during entity state updates.
+
+
 ## v3.6.0
 
 - Adds recorder-safe compact/capped sensor attributes.

@@ -14,6 +14,7 @@ from .helpers import (
     unit_of_measurement,
 )
 from .repairs_engine import get_cached_repairs_report
+from .analytics_cache import get_cached_analytics
 from .safe_summary import compact_area_floor_summary, compact_device_explorer_summary, compact_repairs_report, compact_activity_events, compact_area_apply
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
 
@@ -197,11 +198,12 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "recent_activity":
             return stats.get("last_activity") or "No recent activity"
 
-        live = live_device_stats(data)
+        cache = get_cached_analytics(data)
+        live = cache.get("live") or {}
         if self.key in live:
             return live[self.key]
 
-        model_stats = smart_model_stats(data)
+        model_stats = cache.get("model") or {}
         model_map = {
             "model_lights": "light",
             "model_switches": "switch",
@@ -218,7 +220,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "model_average_confidence":
             return model_stats.get("average_confidence")
 
-        area_stats = area_floor_stats(data)
+        area_stats = cache.get("area") or {}
         if self.key == "area_prep_area_count":
             return area_stats.get("area_count")
         if self.key == "area_prep_floor_count":
@@ -236,7 +238,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "area_apply_last_skipped":
             return stats.get("last_area_apply_skipped", 0)
 
-        explorer = device_explorer_stats(data)
+        explorer = cache.get("explorer") or {}
         if self.key == "device_explorer_tracked_refs":
             return explorer.get("tracked_refs", 0)
         if self.key == "device_explorer_filtered_refs":
@@ -248,7 +250,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             top = explorer.get("top_filtered_refs") or []
             return top[0].get("count", 0) if top else 0
 
-        report = get_cached_repairs_report(data)
+        report = cache.get("repairs") or get_cached_repairs_report(data)
         if self.key == "repairs_total_candidates":
             return report.get("total_candidates", 0)
         if self.key == "repairs_critical_count":
@@ -278,7 +280,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             attrs["activity_excluded_terms"] = (data.get("activity_excluded_terms") or [])[:20]
             attrs["filtered_count"] = stats.get("recent_activity_filtered_count", 0)
         if self.key == "model_average_confidence":
-            attrs["model_summary"] = smart_model_stats(data)
+            attrs["model_summary"] = (get_cached_analytics(data).get("model") or {})
         if self.key in {
             "area_prep_area_count",
             "area_prep_floor_count",
@@ -286,7 +288,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "area_prep_top_area_devices",
             "area_prep_top_floor_devices",
         }:
-            attrs["area_floor_summary"] = compact_area_floor_summary(area_floor_stats(data))
+            attrs["area_floor_summary"] = compact_area_floor_summary(get_cached_analytics(data).get("area") or {})
         if self.key in {"area_apply_last_changed", "area_apply_last_skipped"}:
             attrs["last_area_apply"] = compact_area_apply(stats.get("last_area_apply"))
         if self.key in {
@@ -295,7 +297,7 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "device_explorer_top_active_count",
             "device_explorer_top_filtered_count",
         }:
-            attrs["device_explorer"] = compact_device_explorer_summary(device_explorer_stats(data))
+            attrs["device_explorer"] = compact_device_explorer_summary(get_cached_analytics(data).get("explorer") or {})
         if self.key in {
             "repairs_total_candidates",
             "repairs_critical_count",
@@ -303,5 +305,5 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "repairs_info_count",
             "repairs_health_score",
         }:
-            attrs["repairs_report"] = compact_repairs_report(get_cached_repairs_report(data))
+            attrs["repairs_report"] = compact_repairs_report((get_cached_analytics(data).get("repairs") or get_cached_repairs_report(data)))
         return attrs
