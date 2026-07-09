@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.7.0
+
+- Adds Intelligent Device Management advisory report, sensors, diagnostics, and dashboard YAML.
+
+
 ## v3.6.1
 
 - Adds cached analytics layer for heavy dashboard calculations.

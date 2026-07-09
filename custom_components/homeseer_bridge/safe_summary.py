@@ -107,3 +107,21 @@ def compact_area_apply(summary: dict | None) -> dict:
         "skipped_samples": (summary.get("skipped_samples") or [])[:MAX_REFS],
         "details": "Full area apply report is available in downloaded diagnostics.",
     }
+
+
+def compact_management_report(report: dict | None) -> dict:
+    report = report or {}
+    samples = report.get('samples') or {}
+    return {
+        'generated_at': report.get('generated_at'),
+        'cache_seconds': report.get('cache_seconds'),
+        'counts': report.get('counts') or {},
+        'samples': {
+            'duplicate_name_groups': (samples.get('duplicate_name_groups') or [])[:5],
+            'missing_area': (samples.get('missing_area') or [])[:5],
+            'low_confidence': (samples.get('low_confidence') or [])[:5],
+            'cleanup_candidates': (samples.get('cleanup_candidates') or [])[:5],
+            'naming_candidates': (samples.get('naming_candidates') or [])[:5],
+        },
+        'note': 'Full management report is available in downloaded diagnostics.',
+    }

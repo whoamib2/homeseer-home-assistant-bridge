@@ -276,3 +276,36 @@
 
         Open Developer Tools → States and select one of the Repairs sensors.
         The `repairs_report` attribute contains cached repair candidates.
+
+# ---- homeseer_bridge_intelligent_device_management_sections.yaml ----
+# Optional v3.7.0 Intelligent Device Management section.
+# Advisory only. This version does not automatically rename, disable, or move devices.
+
+- type: grid
+  cards:
+    - type: heading
+      heading: Intelligent Device Management
+    - type: entities
+      title: Management Recommendations
+      entities:
+        - entity: sensor.homeseer_bridge_duplicate_name_groups
+          name: Duplicate Name Groups
+        - entity: sensor.homeseer_bridge_management_missing_area
+          name: Missing Area Data
+        - entity: sensor.homeseer_bridge_management_low_confidence
+          name: Low Classification Confidence
+        - entity: sensor.homeseer_bridge_management_cleanup_candidates
+          name: Cleanup Candidates
+        - entity: sensor.homeseer_bridge_management_naming_candidates
+          name: Naming Suggestions
+        - entity: sensor.homeseer_bridge_management_class_suggestions
+          name: Class Suggestions
+        - entity: sensor.homeseer_bridge_management_area_suggestions
+          name: Area Suggestions
+    - type: markdown
+      title: Details
+      content: >-
+        Open Developer Tools → States and select one of the Management sensors.
+
+        The `management_report` attribute contains compact samples. The full
+        report is available in downloaded diagnostics.

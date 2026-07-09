@@ -15,7 +15,8 @@ from .helpers import (
 )
 from .repairs_engine import get_cached_repairs_report
 from .analytics_cache import get_cached_analytics
-from .safe_summary import compact_area_floor_summary, compact_device_explorer_summary, compact_repairs_report, compact_activity_events, compact_area_apply
+from .management_engine import get_management_report
+from .safe_summary import compact_area_floor_summary, compact_device_explorer_summary, compact_repairs_report, compact_activity_events, compact_area_apply, compact_management_report
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, live_device_stats, smart_model_stats, area_floor_stats, device_explorer_stats
 
 
@@ -130,6 +131,13 @@ MONITOR_SENSORS = [
     ("repairs_warning_count", "HomeSeer Bridge Repair Warnings", None),
     ("repairs_info_count", "HomeSeer Bridge Repair Info", None),
     ("repairs_health_score", "HomeSeer Bridge Repairs Health Score", '%'),
+    ("management_duplicate_name_groups", "HomeSeer Bridge Duplicate Name Groups", None),
+    ("management_missing_area", "HomeSeer Bridge Management Missing Area", None),
+    ("management_low_confidence", "HomeSeer Bridge Management Low Confidence", None),
+    ("management_cleanup_candidates", "HomeSeer Bridge Management Cleanup Candidates", None),
+    ("management_naming_candidates", "HomeSeer Bridge Management Naming Candidates", None),
+    ("management_class_suggestions", "HomeSeer Bridge Management Class Suggestions", None),
+    ("management_area_suggestions", "HomeSeer Bridge Management Area Suggestions", None),
     ("model_lights", "HomeSeer Bridge Model Lights", None),
     ("model_switches", "HomeSeer Bridge Model Switches", None),
     ("model_sensors", "HomeSeer Bridge Model Sensors", None),
@@ -262,6 +270,20 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
         if self.key == "repairs_health_score":
             return report.get("repair_health_score")
 
+        management = cache.get("management") or get_management_report(data)
+        management_counts = management.get("counts") or {}
+        management_map = {
+            "management_duplicate_name_groups": "duplicate_name_groups",
+            "management_missing_area": "missing_area",
+            "management_low_confidence": "low_confidence",
+            "management_cleanup_candidates": "cleanup_candidates",
+            "management_naming_candidates": "naming_candidates",
+            "management_class_suggestions": "class_suggestions",
+            "management_area_suggestions": "area_suggestions",
+        }
+        if self.key in management_map:
+            return management_counts.get(management_map[self.key], 0)
+
         return stats.get(self.key)
 
     @property
@@ -306,4 +328,14 @@ class HomeSeerBridgeMonitorSensor(SensorEntity):
             "repairs_health_score",
         }:
             attrs["repairs_report"] = compact_repairs_report((get_cached_analytics(data).get("repairs") or get_cached_repairs_report(data)))
+        if self.key in {
+            "management_duplicate_name_groups",
+            "management_missing_area",
+            "management_low_confidence",
+            "management_cleanup_candidates",
+            "management_naming_candidates",
+            "management_class_suggestions",
+            "management_area_suggestions",
+        }:
+            attrs["management_report"] = compact_management_report((get_cached_analytics(data).get("management") or get_management_report(data)))
         return attrs

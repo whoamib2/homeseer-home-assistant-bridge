@@ -1,5 +1,14 @@
 # HomeSeer Home Assistant Bridge
 
+## v3.7.0
+
+- Adds Intelligent Device Management advisory layer.
+- Detects duplicate name groups, missing area data, low-confidence classifications, cleanup candidates, naming suggestions, class suggestions, and area suggestions.
+- Adds management recommendation sensors with compact attributes.
+- Adds full management report to diagnostics.
+- Advisory only: this version does not automatically rename, disable, or move devices.
+
+
 ## v3.6.1
 
 - Adds cached analytics for Live Intelligence, Smart Device Model, Auto Area, Device Explorer, and Repairs.
