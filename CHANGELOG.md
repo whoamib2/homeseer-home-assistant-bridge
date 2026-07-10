@@ -1,8 +1,13 @@
 # Changelog
 
-## v3.7.0
+## v3.8.0
 
-- Adds Intelligent Device Management advisory report, sensors, diagnostics, and dashboard YAML.
+- Adds HACS readiness files.
+- Adds `hacs.json`.
+- Adds `strings.json` and `translations/en.json`.
+- Adds GitHub issue templates, PR template, and HACS validation workflow.
+- Refreshes README, info, and publishing documentation.
+- Updates manifest metadata for documentation, issue tracker, code owners, and HACS friendliness.
 
 
 ## v3.6.1

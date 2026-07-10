@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .analytics_cache import get_cached_analytics
-from .management_engine import get_management_report
 from .repairs_engine import get_cached_repairs_report
 from .device_model import summarize_models, model_dict, area_floor_summary
 from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bridge_available, live_device_stats, device_explorer_stats
@@ -89,7 +88,6 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "device_explorer": device_explorer_stats(data),
         "repairs": get_cached_repairs_report(data),
         "analytics_cache": get_cached_analytics(data),
-        "management": get_management_report(data),
         "summary": {
             "health_score": health_score(data),
             "bridge_available": bridge_available(data),

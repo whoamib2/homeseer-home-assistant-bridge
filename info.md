@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using mcsMQTT and the HomeSeer JSON API. Version 3.7.0 adds Intelligent Device Management advisory sensors and diagnostics.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and mcsMQTT. Includes local updates, dashboards, diagnostics, cached analytics, recent activity, Auto Area Prep, Device Explorer Prep, and recorder-safe attributes for large installations.

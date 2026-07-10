@@ -1,0 +1,45 @@
+{
+  "title": "HomeSeer Bridge",
+  "config": {
+    "step": {
+      "user": {
+        "title": "HomeSeer Bridge",
+        "description": "Connect HomeSeer HS4 to Home Assistant using the HomeSeer JSON API and mcsMQTT.",
+        "data": {
+          "homeseer_url": "HomeSeer URL",
+          "mqtt_prefix": "MQTT prefix",
+          "excluded_terms": "Excluded terms",
+          "activity_excluded_terms": "Recent activity excluded terms",
+          "enable_debug_logging": "Enable debug logging",
+          "refresh_interval_seconds": "API refresh interval",
+          "reconnect_interval_seconds": "MQTT reconnect interval",
+          "virtual_poll_interval_seconds": "Virtual device poll interval"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "HomeSeer Bridge is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HomeSeer Bridge options",
+        "description": "Adjust sync, polling, filtering, and diagnostic options.",
+        "data": {
+          "mqtt_prefix": "MQTT prefix",
+          "excluded_terms": "Excluded terms",
+          "activity_excluded_terms": "Recent activity excluded terms",
+          "enable_debug_logging": "Enable debug logging",
+          "refresh_interval_seconds": "API refresh interval",
+          "reconnect_interval_seconds": "MQTT reconnect interval",
+          "virtual_poll_interval_seconds": "Virtual device poll interval"
+        }
+      }
+    }
+  }
+}

@@ -48,8 +48,6 @@ def ensure_stats(data: dict) -> dict:
     stats.setdefault("repairs_health_score", None)
     stats.setdefault("analytics_cache", None)
     stats.setdefault("analytics_cache_timestamp", None)
-    stats.setdefault("management_report", None)
-    stats.setdefault("management_report_timestamp", None)
     stats.setdefault("last_activity", None)
     return stats
 

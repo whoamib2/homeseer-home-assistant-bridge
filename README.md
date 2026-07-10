@@ -1,151 +1,24 @@
-# HomeSeer Home Assistant Bridge
+# HomeSeer Bridge
 
-## v3.7.0
+A Home Assistant custom integration for **HomeSeer HS4** using the HomeSeer JSON API and **mcsMQTT**.
 
-- Adds Intelligent Device Management advisory layer.
-- Detects duplicate name groups, missing area data, low-confidence classifications, cleanup candidates, naming suggestions, class suggestions, and area suggestions.
-- Adds management recommendation sensors with compact attributes.
-- Adds full management report to diagnostics.
-- Advisory only: this version does not automatically rename, disable, or move devices.
+Designed for large HomeSeer installations with local updates, dashboards, diagnostics, cached analytics, and recorder-safe attributes.
 
+## Features
 
-## v3.6.1
-
-- Adds cached analytics for Live Intelligence, Smart Device Model, Auto Area, Device Explorer, and Repairs.
-- Sensor values and attributes now read cached data instead of scanning thousands of HomeSeer devices during state updates.
-- Reduces Home Assistant event-loop blocking and `Updating state took ... seconds` warnings on large installs.
-- Keeps v3.6.0 recorder-safe compact attributes.
-
-
-## v3.6.0
-
-- Adds recorder-safe compact sensor attributes.
-- Caps dashboard sensor attributes so large HomeSeer installs do not exceed Home Assistant's 16 KB recorder attribute limit.
-- Moves detailed Auto Area, Device Explorer, Repairs, and Recent Activity data to diagnostics instead of entity attributes.
-- Keeps dashboards functional while avoiding oversized state serialization.
-- Keeps v3.5.x cached Repairs Prep and Auto Area entity ID fixes.
-
-
-## v3.5.4
-
-- Fixes Auto Area dashboard entity resolution by adding explicit suggested object IDs for Auto Area Prep and Auto Area Apply monitor sensors.
-- Keeps the v3.5.2 cached Repairs Prep performance fix.
-
-
-## v3.5.3
-
-- Fixes dashboard `Entity not found` warnings for Auto Area Prep and Auto Area Apply cards.
-- Adds the missing monitor sensors used by existing dashboard YAML.
-- Keeps the v3.5.2 cached Repairs Prep performance fix.
-
-
-## v3.5.2
-
-- Rebuilds Repairs Prep from the stable v3.4.0 base.
-- Adds cached Repairs Prep so sensors never recalculate expensive reports during state reads.
-- Repairs report updates at startup and after HomeSeer API refreshes, then sensors read cached values only.
-- Adds repair candidate sensors and diagnostics using cached data.
-- Designed for large HomeSeer installs to avoid Home Assistant event-loop stalls.
-
-
-## v3.4.0
-
-- Adds Device Explorer Prep metrics.
-- Tracks per-ref visible activity counts.
-- Tracks per-ref filtered/noisy activity counts.
-- Adds top active refs, top filtered refs, and recently changed refs to sensor attributes and diagnostics.
-- Adds Device Explorer Prep dashboard YAML.
-
-
-## v3.3.0
-
-- Adds Recent Activity filtering.
-- New option: `activity_excluded_terms`, defaulting to `utility,jon00`.
-- Filters noisy activity events from the Live Event Viewer without removing devices/entities.
-- Adds `sensor.homeseer_bridge_recent_activity_filtered_count`.
-- Adds activity filter details to diagnostics and sensor attributes.
-
-
-## v3.2.2
-
-- Rebuilds Auto Area Apply from the stable v3.1.1 base.
-- Adds manual `homeseer_bridge.apply_suggested_areas` service.
-- Dry-run is enabled by default.
-- Skips devices already assigned to an area unless `overwrite: true` is used.
-- Fixes the v3.2.0/v3.2.1 setup handler indentation regression.
-
-
-A custom Home Assistant integration that bridges **HomeSeer HS4** devices into Home Assistant using the HomeSeer JSON API for discovery/control and **mcsMQTT** for fast state updates.
-
-Built for large HomeSeer installations with a focus on speed, diagnostics, visibility, and a polished Home Assistant experience.
-
-## Highlights
-
-- Fast MQTT-driven state updates through mcsMQTT
-- HomeSeer JSON API control path
-- Supports lights, switches, sensors, binary sensors, locks, covers, fans, and climate-style devices
-- Hybrid sync for virtual HomeSeer devices that do not publish MQTT reliably
-- Bridge health sensors and binary sensors
+- Local HomeSeer JSON API discovery and control
+- Fast state updates through mcsMQTT
+- Lights, switches, sensors, binary sensors, locks, covers, and fans
+- Virtual device polling
+- Bridge health monitoring
 - API latency, MQTT activity, virtual polling, reconnect, and discovery metrics
-- Rich diagnostics download from Home Assistant
-- Dashboard YAML sections for bridge health, live device intelligence, recent activity, live event viewer, smart device modeling, and Auto Area Prep
-- Smart Device Model classification layer
-- Auto Area Prep preview from HomeSeer `location2` and `location`
-- HACS-compatible custom integration structure
-
-## Current features
-
-### Bridge Monitor
-
-Creates monitor entities such as:
-
-- `binary_sensor.homeseer_bridge_connected`
-- `binary_sensor.homeseer_bridge_api_healthy`
-- `sensor.homeseer_bridge_health_score`
-- `sensor.homeseer_bridge_devices`
-- `sensor.homeseer_bridge_virtual_devices`
-- `sensor.homeseer_bridge_api_latency`
-- `sensor.homeseer_bridge_last_mqtt_age`
-- `sensor.homeseer_bridge_unmatched_topics`
-
-### Live Device Intelligence
-
-Adds system-wide counts for devices on/off/unknown, lights, switches, covers, locks, fans, low battery devices, MQTT updates/minute, API refreshes/hour, virtual polls/minute, and uptime.
-
-### Recent Activity and Live Event Viewer
-
-Tracks recent HomeSeer changes in:
-
-- `sensor.homeseer_bridge_recent_activity`
-- `sensor.homeseer_bridge_recent_activity_count`
-
-Recent events include HomeSeer ref, device name, source, old value, new value, and timestamp.
-
-### Smart Device Model
-
-Classifies HomeSeer devices into:
-
-- light
-- switch
-- sensor
-- binary_sensor
-- lock
-- cover
-- fan
-- climate
-- other
-
-Entities include troubleshooting attributes for HomeSeer ref, location, interface, device type, proposed category, confidence, suggested area, virtual flag, and battery flag.
-
-### Auto Area Prep
-
-Preview-only mapping from HomeSeer location fields:
-
-- `location2` → proposed floor
-- `location` → proposed room
-- `location2 + location` → proposed area
-
-This does **not** automatically create or modify Home Assistant Areas or Floors.
+- Recent Activity and Live Event Viewer dashboard snippets
+- Smart Device Model classification
+- Auto Area Prep and manual Auto Area Apply
+- Device Explorer Prep
+- Cached Repairs Prep
+- Recorder-safe compact attributes for large installs
+- HACS-ready repository structure
 
 ## Installation
 
@@ -161,7 +34,7 @@ This does **not** automatically create or modify Home Assistant Areas or Floors.
 8. Restart Home Assistant.
 9. Go to **Settings → Devices & services → Add integration → HomeSeer Bridge**.
 
-### Manual install
+### Manual installation
 
 Copy:
 
@@ -175,7 +48,7 @@ to:
 /config/custom_components/homeseer_bridge
 ```
 
-Restart Home Assistant, then add the integration from **Settings → Devices & services**.
+Restart Home Assistant and add the integration from **Settings → Devices & services**.
 
 ## Configuration
 
@@ -185,65 +58,33 @@ Typical settings:
 HomeSeer URL: http://192.168.0.193
 MQTT Prefix: Homeseer/Chip23/mcsMQTT
 Excluded terms: august,yolink,shelly
+Recent activity excluded terms: utility,jon00
 ```
-
-Use excluded terms to avoid duplicating devices already integrated directly into Home Assistant.
 
 ## Dashboards
 
-Dashboard snippets are included in `dashboards/`.
+Dashboard snippets are included in the `dashboards/` folder.
 
-Useful files:
+Recommended combined file:
 
-- `dashboards/homeseer_bridge_sections_view.yaml`
-- `dashboards/homeseer_bridge_live_intelligence_sections.yaml`
-- `dashboards/homeseer_bridge_recent_activity_sections.yaml`
-- `dashboards/homeseer_bridge_live_event_viewer_sections.yaml`
-- `dashboards/homeseer_bridge_smart_device_model_sections.yaml`
-- `dashboards/homeseer_bridge_auto_area_prep_sections.yaml`
-- `dashboards/homeseer_bridge_optional_sections_all.yaml`
-
-For current Home Assistant dashboards using the **Sections** layout, paste the desired YAML into a Sections dashboard view.
-
-## Services
-
-- `homeseer_bridge.refresh_all`
-- `homeseer_bridge.control_device`
-- `homeseer_bridge.reload_devices`
-- `homeseer_bridge.create_dashboard`
+```text
+dashboards/homeseer_bridge_optional_sections_all.yaml
+```
 
 ## Diagnostics
 
-Go to:
+Download diagnostics from:
 
 ```text
 Settings → Devices & services → HomeSeer Bridge → Download diagnostics
 ```
 
-Diagnostics include bridge health, API status/latency, MQTT activity, virtual polling, unmatched MQTT topics, recent activity, Smart Device Model summary, Auto Area Prep summary, and sample HomeSeer devices.
+Full detail reports are kept in diagnostics instead of large sensor attributes.
 
-## Documentation
+## HACS publishing
 
-- [Installation](docs/INSTALL.md)
-- [Dashboard setup](docs/DASHBOARDS.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Changelog](CHANGELOG.md)
-
-## Recommended GitHub About section
-
-Description:
-
-```text
-Home Assistant custom integration for HomeSeer HS4 with MQTT updates, diagnostics, smart device modeling, dashboards, and Auto Area Prep.
-```
-
-Suggested topics:
-
-```text
-home-assistant, homeseer, homeseer-hs4, mqtt, mcsmqtt, hacs, smart-home, home-automation, custom-integration
-```
+See `docs/HACS_PUBLISHING.md`.
 
 ## License
 
-MIT License
+MIT
