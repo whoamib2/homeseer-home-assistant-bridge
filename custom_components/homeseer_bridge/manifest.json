@@ -1,18 +1,17 @@
 {
   "domain": "homeseer_bridge",
   "name": "HomeSeer Bridge",
-  "after_dependencies": [],
   "codeowners": [
     "@whoamib2"
   ],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": [
+    "mqtt"
+  ],
   "documentation": "https://github.com/whoamib2/homeseer-home-assistant-bridge",
   "integration_type": "hub",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/whoamib2/homeseer-home-assistant-bridge/issues",
-  "loggers": [],
-  "mqtt": [],
   "requirements": [],
   "version": "3.8.0"
 }
