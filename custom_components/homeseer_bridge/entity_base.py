@@ -6,6 +6,7 @@ from .const import DOMAIN, SIGNAL_STATE_UPDATED
 from .bridge_stats import bridge_available
 from .helpers import device_info, full_name
 from .device_model import model_dict
+from .capability_engine import capability_attributes
 
 
 class HomeSeerEntityBase:
@@ -42,7 +43,7 @@ class HomeSeerEntityBase:
     def extra_state_attributes(self):
         device = self.device or {}
         model = model_dict(device, self.ref)
-        return {
+        attrs = {
             "homeseer_ref": self.ref,
             "homeseer_location": device.get("location"),
             "homeseer_location2": device.get("location2"),
@@ -57,6 +58,8 @@ class HomeSeerEntityBase:
             "homeseer_is_virtual": model.get("is_virtual"),
             "homeseer_is_battery": model.get("is_battery"),
         }
+        attrs.update(capability_attributes(device))
+        return attrs
 
     async def async_added_to_hass(self):
         self._sync_registry_metadata_from_device()

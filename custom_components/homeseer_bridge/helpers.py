@@ -4,6 +4,7 @@ import re
 
 from .topic_map import REF_TO_TOPICS
 from .device_model import classify_device
+from .capability_engine import capability_platform, resolve_status_text
 
 from .const import (
     DOMAIN,
@@ -178,9 +179,13 @@ def apply_mqtt_state(device: dict, payload):
     device["numeric_value"] = numeric
 
     if numeric is not None:
-        device["status"] = "On" if numeric > 0 else "Off"
+        match = resolve_status_text(device, numeric)
+        device["status"] = match.text or status
+        device["status_source"] = match.source
+        device["semantic_state"] = match.semantic
     else:
         device["status"] = status
+        device["status_source"] = "mqtt_text"
 
 def has_on_off_controls(device: dict) -> bool:
     labels = str(device.get("labels_blob", "")).lower()
@@ -210,18 +215,29 @@ def is_cover(device: dict) -> bool:
     return "garage door" in text or "barrier" in text or ("open" in labels and "close" in labels and "garage" in text)
 
 def is_binary_sensor(device: dict) -> bool:
+    """Return True for HomeSeer devices that should be HA binary sensors.
+
+    HomeSeer/Z-Wave plugins use several different labels for contact sensors,
+    including "Door/Window", "Door Window", "Notification", and "Contact".
+    """
     text = text_blob(device)
-    return any(k in text for k in [
+    binary_terms = [
         "motion",
         "contact",
         "leak",
         "smoke",
         "co sensor",
+        "carbon monoxide",
         "water sensor",
         "door sensor",
         "window sensor",
+        "door/window",
+        "door window",
+        "door-window",
+        "opening sensor",
         "tamper",
-    ])
+    ]
+    return any(term in text for term in binary_terms)
 
 def is_fan(device: dict) -> bool:
     text = text_blob(device)
@@ -283,13 +299,15 @@ def binary_device_class(device: dict) -> str | None:
     text = text_blob(device)
     if "motion" in text:
         return "motion"
-    if "leak" in text or "water sensor" in text or "water" in text:
+    if "leak" in text or "water sensor" in text or "water leak" in text:
         return "moisture"
     if "smoke" in text:
         return "smoke"
+    if "carbon monoxide" in text or "co sensor" in text:
+        return "carbon_monoxide"
     if "tamper" in text:
         return "tamper"
-    if "door" in text or "window" in text or "contact" in text:
+    if any(term in text for term in ("door", "window", "contact", "opening")):
         return "opening"
     return None
 

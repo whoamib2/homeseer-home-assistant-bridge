@@ -8,6 +8,7 @@ from .const import DOMAIN, SIGNAL_NEW_DEVICES
 from .entity_base import HomeSeerEntityBase
 from .helpers import bridge_device_info, is_binary_sensor, is_excluded, binary_device_class
 from .bridge_stats import ensure_stats, health_score
+from .capability_engine import binary_is_on, capability_attributes
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -59,22 +60,18 @@ class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):
 
     @property
     def is_on(self):
+        return binary_is_on(self.device)
+
+    @property
+    def extra_state_attributes(self):
+        attrs = dict(super().extra_state_attributes or {})
         device = self.device
-        value = device.get("numeric_value", device.get("value"))
-        status = str(device.get("status") or "").lower()
-
-        if value is not None:
-            try:
-                return float(value) != 0
-            except (TypeError, ValueError):
-                pass
-
-        if status in {"on", "open", "wet", "motion", "detected", "true", "yes", "unlocked"}:
-            return True
-        if status in {"off", "closed", "dry", "clear", "false", "no", "locked"}:
-            return False
-
-        return None
+        attrs.update(capability_attributes(device))
+        attrs.update({
+            "homeseer_raw_value": device.get("numeric_value", device.get("value")),
+            "homeseer_raw_status": device.get("status"),
+        })
+        return attrs
 
     @property
     def device_class(self):

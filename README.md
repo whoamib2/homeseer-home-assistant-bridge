@@ -1,5 +1,24 @@
 # HomeSeer Bridge
 
+## v4.0.0 — Metadata-Driven Capabilities
+
+- Adds a HomeSeer CAPI Status/Graphics and Controls capability engine.
+- Resolves values such as `22`, `23`, `5632`, and `5633` through HomeSeer status metadata.
+- Correctly maps Door/Window values to Open/Closed even when both values are non-zero.
+- Detects locks using HomeSeer `DoorLock` and `DoorUnlock` control uses.
+- Uses metadata-provided lock command values instead of assuming `0/255`.
+- Preserves resolved status source, semantic state, status-pair count, and control-pair count as diagnostics attributes.
+- MQTT numeric updates now retain HomeSeer's semantic status instead of replacing it with generic On/Off.
+
+
+## v3.8.1
+
+- Correctly recognizes HomeSeer/Z-Wave `Door/Window` and contact devices as Home Assistant binary sensors.
+- Uses HomeSeer status text before raw numeric values.
+- Displays contact devices as Open/Closed instead of values such as 0, 1, 22, or 23.
+- Preserves the raw HomeSeer value and status as entity attributes.
+
+
 A Home Assistant custom integration for **HomeSeer HS4** using the HomeSeer JSON API and **mcsMQTT**.
 
 Designed for large HomeSeer installations with local updates, dashboards, diagnostics, cached analytics, and recorder-safe attributes.

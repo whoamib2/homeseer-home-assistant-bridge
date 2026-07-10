@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.0.0
+
+- Adds metadata-driven HomeSeer capability engine.
+- Translates CAPI Status/Graphics values into semantic Home Assistant states.
+- Detects lock controls through DoorLock/DoorUnlock metadata.
+- Preserves semantic status during MQTT updates.
+- Adds capability diagnostics attributes.
+
+
+## v3.8.1
+
+- Recognizes `Door/Window`, contact, and opening devices as binary sensors.
+- Maps HomeSeer status text and numeric notification values to Home Assistant Open/Closed states.
+- Adds raw HomeSeer state attributes for troubleshooting.
+
+
 ## v3.8.0
 
 - Adds HACS readiness files.

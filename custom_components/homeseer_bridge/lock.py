@@ -10,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN, SIGNAL_NEW_DEVICES
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_lock, is_excluded
+from .capability_engine import lock_state, control_value_for_use, capability_attributes
 
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -55,26 +56,36 @@ class HomeSeerLock(HomeSeerEntityBase, LockEntity):
 
     @property
     def is_locked(self):
-        status = str(self.device.get("status", "")).lower()
-        value = self.device.get("numeric_value")
-        if "unlock" in status:
-            return False
-        if "lock" in status:
+        state = lock_state(self.device)
+        if state in {"locked", "locking", "jammed"}:
             return True
-        if value is not None:
-            return value > 0
+        if state in {"unlocked", "unlocking"}:
+            return False
         return None
+
+    @property
+    def extra_state_attributes(self):
+        attrs = dict(super().extra_state_attributes or {})
+        attrs.update(capability_attributes(self.device))
+        attrs["homeseer_lock_state"] = lock_state(self.device)
+        return attrs
 
     async def async_lock(self, **kwargs):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
-        await api.async_control_device_by_value(self.ref, 255)
-        self.device["numeric_value"] = 255.0
+        value = control_value_for_use(self.device, "doorlock")
+        if value is None:
+            value = 1
+        await api.async_control_device_by_value(self.ref, value)
+        self.device["numeric_value"] = float(value)
         self.device["status"] = "Locked"
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
-        await api.async_control_device_by_value(self.ref, 0)
+        value = control_value_for_use(self.device, "doorunlock")
+        if value is None:
+            value = 0
+        await api.async_control_device_by_value(self.ref, value)
         self.device["numeric_value"] = 0.0
         self.device["status"] = "Unlocked"
         self.async_write_ha_state()

@@ -77,7 +77,7 @@ def classify_device(device: dict, ref=None) -> HomeSeerDeviceModel:
         category, confidence = "lock", 90
     elif "fan" in text:
         category, confidence = "fan", 80
-    elif _contains_any(text, ("motion", "leak", "water sensor", "contact", "door sensor", "window sensor", "smoke", "co sensor", "tamper")):
+    elif _contains_any(text, ("motion", "leak", "water sensor", "contact", "door sensor", "window sensor", "door/window", "door window", "smoke", "co sensor", "tamper")):
         category, confidence = "binary_sensor", 85
     elif _contains_any(text, ("battery", "temperature", "humidity", "illuminance", "lux", "power", "energy", "voltage", "current")):
         category, confidence = "sensor", 75

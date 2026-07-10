@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and mcsMQTT. Includes local updates, dashboards, diagnostics, cached analytics, recent activity, Auto Area Prep, Device Explorer Prep, and recorder-safe attributes for large installations.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and mcsMQTT. Version 4.0.0 adds metadata-driven capability and state translation using HomeSeer CAPI Status/Graphics and Controls data.

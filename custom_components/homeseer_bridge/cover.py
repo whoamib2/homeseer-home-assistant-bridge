@@ -10,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN, SIGNAL_NEW_DEVICES
 from .entity_base import HomeSeerEntityBase
 from .helpers import is_cover, is_excluded
+from .capability_engine import resolve_status_text, capability_attributes
 
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -57,15 +58,19 @@ class HomeSeerCover(HomeSeerEntityBase, CoverEntity):
 
     @property
     def is_closed(self):
-        status = str(self.device.get("status", "")).lower()
-        if "closed" in status:
+        match = resolve_status_text(self.device)
+        text = match.text.lower()
+        if "closed" in text:
             return True
-        if "open" in status:
+        if "open" in text:
             return False
-        value = self.device.get("numeric_value")
-        if value is not None:
-            return value == 0
         return None
+
+    @property
+    def extra_state_attributes(self):
+        attrs = dict(super().extra_state_attributes or {})
+        attrs.update(capability_attributes(self.device))
+        return attrs
 
     async def async_open_cover(self, **kwargs):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
