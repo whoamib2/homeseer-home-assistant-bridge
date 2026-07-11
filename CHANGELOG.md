@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.1.0
+
+- Adds metadata-priority binary device-class resolution.
+- Fixes door/contact devices incorrectly displaying Detected/Clear.
+- Adds native door, window, opening, moisture, smoke, carbon monoxide, gas, tamper, vibration, occupancy, presence, and motion classes.
+
+
 ## v4.0.0
 
 - Adds metadata-driven HomeSeer capability engine.

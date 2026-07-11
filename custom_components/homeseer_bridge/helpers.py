@@ -4,7 +4,7 @@ import re
 
 from .topic_map import REF_TO_TOPICS
 from .device_model import classify_device
-from .capability_engine import capability_platform, resolve_status_text
+from .capability_engine import capability_platform, resolve_status_text, binary_device_class_from_metadata
 
 from .const import (
     DOMAIN,
@@ -296,20 +296,7 @@ def is_plain_sensor(device: dict) -> bool:
     )
 
 def binary_device_class(device: dict) -> str | None:
-    text = text_blob(device)
-    if "motion" in text:
-        return "motion"
-    if "leak" in text or "water sensor" in text or "water leak" in text:
-        return "moisture"
-    if "smoke" in text:
-        return "smoke"
-    if "carbon monoxide" in text or "co sensor" in text:
-        return "carbon_monoxide"
-    if "tamper" in text:
-        return "tamper"
-    if any(term in text for term in ("door", "window", "contact", "opening")):
-        return "opening"
-    return None
+    return binary_device_class_from_metadata(device)
 
 def sensor_device_class(device: dict) -> str | None:
     text = text_blob(device)

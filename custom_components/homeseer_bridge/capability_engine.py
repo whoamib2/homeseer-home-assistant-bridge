@@ -223,3 +223,54 @@ def capability_attributes(device: dict) -> dict[str, Any]:
         "homeseer_status_pair_count": len(status_pairs(device)),
         "homeseer_control_pair_count": len(control_pairs(device)),
     }
+
+
+def binary_device_class_from_metadata(device: dict) -> str | None:
+    """Resolve a Home Assistant binary-sensor device class from HomeSeer metadata."""
+    text = metadata_text(device)
+
+    door_terms = (
+        "door/window",
+        "door window",
+        "door-window",
+        "window/door",
+        "door sensor",
+        "door contact",
+        "front door",
+        "back door",
+        "entry door",
+    )
+    window_terms = (
+        "window sensor",
+        "window contact",
+        "window open",
+        "window closed",
+    )
+
+    if any(term in text for term in door_terms):
+        return "door"
+    if any(term in text for term in window_terms):
+        return "window"
+    if any(term in text for term in ("contact sensor", "opening sensor", "contact", "opening")):
+        return "opening"
+
+    if any(term in text for term in ("water leak", "leak sensor", "water sensor", "moisture", "flood")):
+        return "moisture"
+    if "smoke" in text:
+        return "smoke"
+    if any(term in text for term in ("carbon monoxide", "co sensor", "co alarm")):
+        return "carbon_monoxide"
+    if any(term in text for term in ("gas leak", "combustible gas", "natural gas")):
+        return "gas"
+    if "tamper" in text:
+        return "tamper"
+    if any(term in text for term in ("vibration", "shock sensor", "glass break")):
+        return "vibration"
+    if "occupancy" in text:
+        return "occupancy"
+    if any(term in text for term in ("presence sensor", "presence detected")):
+        return "presence"
+    if any(term in text for term in ("motion sensor", "motion detector", "pir sensor", "motion")):
+        return "motion"
+
+    return None

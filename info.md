@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and mcsMQTT. Version 4.0.0 adds metadata-driven capability and state translation using HomeSeer CAPI Status/Graphics and Controls data.
+Home Assistant custom integration for HomeSeer HS4. Version 4.1.0 adds metadata-priority binary device classes so door and window sensors display Open/Closed while motion and environmental sensors use their native Home Assistant states.

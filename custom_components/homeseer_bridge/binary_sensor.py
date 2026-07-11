@@ -70,6 +70,7 @@ class HomeSeerBinarySensor(HomeSeerEntityBase, BinarySensorEntity):
         attrs.update({
             "homeseer_raw_value": device.get("numeric_value", device.get("value")),
             "homeseer_raw_status": device.get("status"),
+            "homeseer_binary_device_class": binary_device_class(device),
         })
         return attrs
 

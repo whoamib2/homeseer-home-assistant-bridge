@@ -1,5 +1,13 @@
 # HomeSeer Bridge
 
+## v4.1.0 — Binary Device Class Intelligence
+
+- Door sensors now display Open/Closed instead of Detected/Clear.
+- Window sensors use the native window device class.
+- Generic contact sensors use the opening device class.
+- Adds metadata-based moisture, smoke, carbon monoxide, gas, tamper, vibration, occupancy, presence, and motion classes.
+
+
 ## v4.0.0 — Metadata-Driven Capabilities
 
 - Adds a HomeSeer CAPI Status/Graphics and Controls capability engine.
