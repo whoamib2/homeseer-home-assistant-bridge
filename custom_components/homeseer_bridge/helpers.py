@@ -175,14 +175,56 @@ def parse_payload(payload) -> tuple[float | None, str]:
 
 def apply_mqtt_state(device: dict, payload):
     numeric, status = parse_payload(payload)
+    previous_numeric = device.get("numeric_value")
+    previous_status = str(device.get("status") or "")
     device["value"] = payload
     device["numeric_value"] = numeric
 
+    # Preserve a semantic map learned from HomeSeer's API status/value pair.
+    value_status_map = device.setdefault("value_status_map", {})
+    if previous_numeric is not None and previous_status:
+        try:
+            previous_key = str(
+                int(float(previous_numeric))
+                if float(previous_numeric).is_integer()
+                else float(previous_numeric)
+            )
+            previous_lower = previous_status.strip().lower()
+            inactive_terms = ("closed", "off", "clear", "dry", "no motion", "normal", "idle", "unlocked")
+            active_terms = ("open", "on", "detected", "motion", "wet", "alarm", "smoke", "locked", "tamper")
+            if any(term in previous_lower for term in inactive_terms):
+                value_status_map[previous_key] = "inactive"
+            elif any(term in previous_lower for term in active_terms):
+                value_status_map[previous_key] = "active"
+        except (TypeError, ValueError):
+            pass
+
     if numeric is not None:
         match = resolve_status_text(device, numeric)
-        device["status"] = match.text or status
-        device["status_source"] = match.source
-        device["semantic_state"] = match.semantic
+
+        if match.source == "status_metadata":
+            device["status"] = match.text or status
+            device["status_source"] = match.source
+            device["semantic_state"] = match.semantic
+            return
+
+        numeric_key = str(int(numeric) if numeric.is_integer() else numeric)
+        semantic = value_status_map.get(numeric_key)
+
+        # Standard mcsMQTT binary payloads. Do not reuse stale API status text.
+        if semantic is None and numeric == 0:
+            semantic = "inactive"
+        elif semantic is None and numeric in {1, 100, 255}:
+            semantic = "active"
+
+        if semantic is not None:
+            device["semantic_state"] = semantic
+            device["status_source"] = "mqtt_numeric"
+            device["status"] = "On" if semantic == "active" else "Off"
+        else:
+            device["status"] = status
+            device["status_source"] = "mqtt_numeric_raw"
+            device["semantic_state"] = "unknown"
     else:
         device["status"] = status
         device["status_source"] = "mqtt_text"

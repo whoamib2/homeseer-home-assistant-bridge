@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.2.1
+
+- Fixes binary entities remaining in the old state after MQTT 0/255 updates.
+- Makes current MQTT numeric payloads authoritative when HomeSeer status text is stale.
+- Adds learned value/status mapping and regression tests.
+
+
 ## v4.2.0
 
 - Adds `tools/mcsmqtt_bulk_enable.py` for automated outbound association setup.

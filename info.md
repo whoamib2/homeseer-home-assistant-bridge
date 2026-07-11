@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.2.0 includes a safe companion utility for bulk-enabling mcsMQTT outbound publishing with automatic backups and all three HomeSeer change triggers.
+Home Assistant custom integration for HomeSeer HS4. Version 4.2.1 fixes live MQTT updates for 0/255 binary devices by preventing stale API status text from overriding newer MQTT payloads.

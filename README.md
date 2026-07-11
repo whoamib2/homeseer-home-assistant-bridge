@@ -1,5 +1,13 @@
 # HomeSeer Bridge
 
+## v4.2.1 — MQTT Binary State Fix
+
+- Fixes 0/255 door, motion, contact, and other binary sensors not updating from MQTT.
+- Prevents stale HomeSeer API status text from overriding a newer MQTT numeric payload.
+- Learns numeric-to-semantic mappings from HomeSeer API value/status pairs.
+- Adds binary-state mapping diagnostics and regression tests.
+
+
 ## v4.2.0 — mcsMQTT Bulk Publishing Setup
 
 - Adds a safe companion utility to bulk-enable mcsMQTT outbound publishing.

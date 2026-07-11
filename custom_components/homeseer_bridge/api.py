@@ -134,6 +134,20 @@ def normalize_device(raw: dict, ref: int) -> dict:
         if val is not None:
             values.append(val)
 
+    value_status_map = {}
+    if numeric_value is not None and status:
+        status_lower = str(status).strip().lower()
+        inactive_terms = ("closed", "off", "clear", "dry", "no motion", "normal", "idle", "unlocked")
+        active_terms = ("open", "on", "detected", "motion", "wet", "alarm", "smoke", "locked", "tamper")
+        semantic = None
+        if any(term in status_lower for term in inactive_terms):
+            semantic = "inactive"
+        elif any(term in status_lower for term in active_terms):
+            semantic = "active"
+        if semantic:
+            map_key = str(int(numeric_value) if numeric_value.is_integer() else numeric_value)
+            value_status_map[map_key] = semantic
+
     return {
         "ref": ref,
         "name": str(name),
@@ -150,6 +164,7 @@ def normalize_device(raw: dict, ref: int) -> dict:
         "statuses": statuses,
         "labels_blob": " ".join(labels),
         "control_values": values,
+        "value_status_map": value_status_map,
         "raw_text": _flatten_raw(raw),
         "raw": raw,
     }

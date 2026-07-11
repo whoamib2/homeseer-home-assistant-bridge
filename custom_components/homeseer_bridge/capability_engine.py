@@ -178,7 +178,41 @@ def capability_platform(device: dict) -> str:
 
 
 def binary_is_on(device: dict) -> bool | None:
+    """Return a binary state without allowing stale HomeSeer text to win.
+
+    mcsMQTT commonly publishes raw numeric values while HomeSeer's JSON API
+    still contains the previous status string. For example, a door sensor may
+    publish 0/255 while the cached text remains "On-Open-Motion". When no CAPI
+    status-pair match is available, the MQTT numeric value is authoritative.
+    """
     match = resolve_status_text(device)
+
+    if match.source == "status_metadata":
+        if match.semantic == "active":
+            return True
+        if match.semantic == "inactive":
+            return False
+        if match.semantic in {"jammed", "locking"}:
+            return True
+        if match.semantic == "unlocking":
+            return False
+
+    numeric = _float(device.get("numeric_value", device.get("value")))
+    if numeric is not None:
+        known = device.get("value_status_map") or {}
+        mapped = known.get(str(int(numeric) if numeric.is_integer() else numeric))
+        if mapped == "active":
+            return True
+        if mapped == "inactive":
+            return False
+
+        # Standard HomeSeer/mcsMQTT binary values.
+        if numeric == 0:
+            return False
+        if numeric in {1, 100, 255}:
+            return True
+
+    # Use current text only when no useful numeric value exists.
     if match.semantic == "active":
         return True
     if match.semantic == "inactive":
