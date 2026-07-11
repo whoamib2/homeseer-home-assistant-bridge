@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.1.0 adds metadata-priority binary device classes so door and window sensors display Open/Closed while motion and environmental sensors use their native Home Assistant states.
+Home Assistant custom integration for HomeSeer HS4. Version 4.2.0 includes a safe companion utility for bulk-enabling mcsMQTT outbound publishing with automatic backups and all three HomeSeer change triggers.

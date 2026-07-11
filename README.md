@@ -1,5 +1,14 @@
 # HomeSeer Bridge
 
+## v4.2.0 — mcsMQTT Bulk Publishing Setup
+
+- Adds a safe companion utility to bulk-enable mcsMQTT outbound publishing.
+- Generates topics from HomeSeer floor, room, and feature names.
+- Enables Value Change, Value Set, and String Change triggers.
+- Supports a dry run, selected refs, exclusions, and automatic timestamped database backups.
+- Includes a ready-to-edit example for Ref 1359.
+
+
 ## v4.1.0 — Binary Device Class Intelligence
 
 - Door sensors now display Open/Closed instead of Detected/Clear.

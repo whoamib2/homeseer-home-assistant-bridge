@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.2.0
+
+- Adds `tools/mcsmqtt_bulk_enable.py` for automated outbound association setup.
+- Adds dry-run, selected-ref, exclusion, broker, prefix, and backup support.
+- Enables Value Change, Value Set, and String Change events by default.
+
+
 ## v4.1.0
 
 - Adds metadata-priority binary device-class resolution.
