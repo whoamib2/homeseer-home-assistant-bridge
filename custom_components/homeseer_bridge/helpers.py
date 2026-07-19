@@ -5,6 +5,7 @@ import re
 from .topic_map import REF_TO_TOPICS
 from .device_model import classify_device
 from .capability_engine import capability_platform, resolve_status_text, binary_device_class_from_metadata
+from .sensor_metadata import classify_sensor
 
 from .const import (
     DOMAIN,
@@ -341,34 +342,16 @@ def binary_device_class(device: dict) -> str | None:
     return binary_device_class_from_metadata(device)
 
 def sensor_device_class(device: dict) -> str | None:
-    text = text_blob(device)
-    if "temperature" in text or " temp" in text:
-        return "temperature"
-    if "humidity" in text:
-        return "humidity"
-    if "battery" in text:
-        return "battery"
-    if "power" in text or "watts" in text:
-        return "power"
-    if "energy" in text or "kwh" in text:
-        return "energy"
-    if "illuminance" in text or "luminance" in text or "lux" in text:
-        return "illuminance"
-    return None
+    return classify_sensor(device).device_class
 
 def unit_of_measurement(device: dict) -> str | None:
-    text = text_blob(device)
-    if "temperature" in text or " temp" in text:
-        return "°F"
-    if "humidity" in text or "battery" in text:
-        return "%"
-    if "watts" in text or "power" in text:
-        return "W"
-    if "kwh" in text or "energy" in text:
-        return "kWh"
-    if "lux" in text or "illuminance" in text or "luminance" in text:
-        return "lx"
-    return None
+    return classify_sensor(device).unit
+
+def sensor_state_class(device: dict) -> str | None:
+    return classify_sensor(device).state_class
+
+def sensor_category(device: dict) -> str:
+    return classify_sensor(device).category
 
 def on_value(device: dict):
     values = set()

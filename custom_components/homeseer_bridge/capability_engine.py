@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .sensor_metadata import is_strong_sensor_feature
+
 
 @dataclass(frozen=True)
 class StatusMatch:
@@ -148,15 +150,23 @@ def metadata_text(device: dict) -> str:
 
 
 def capability_platform(device: dict) -> str:
-    """Determine the most likely HA platform from HomeSeer metadata."""
+    """Determine the HA platform using the feature's own identity first."""
     text = metadata_text(device)
+    own_text = " ".join(
+        str(device.get(key) or "").lower()
+        for key in ("name", "device_type", "interface", "relationship", "status")
+    )
+
+    # Battery and measurement children must not inherit their parent's type.
+    if is_strong_sensor_feature(device):
+        return "sensor"
 
     if has_control_use(device, "doorlock", "doorunlock") or (
-        "locked" in text and "unlocked" in text and "lock" in text
+        "locked" in own_text and "unlocked" in own_text and "lock" in own_text
     ):
         return "lock"
 
-    if "garage door" in text or "barrier" in text:
+    if "garage door" in own_text or "barrier" in own_text:
         return "cover"
 
     binary_terms = (
@@ -165,15 +175,18 @@ def capability_platform(device: dict) -> str:
         "motion", "water leak", "water sensor", "leak", "smoke",
         "carbon monoxide", "co sensor", "tamper",
     )
-    if any(term in text for term in binary_terms):
+    if any(term in own_text for term in binary_terms):
         return "binary_sensor"
 
-    if " fan" in text:
+    if " fan" in own_text:
         return "fan"
-    if any(term in text for term in ("dimmer", "multilevel", "light", "lamp", "bulb")):
+    if any(term in own_text for term in ("dimmer", "multilevel", "light", "lamp", "bulb")):
         return "light"
-    if any(term in text for term in ("switch", "outlet", "plug", "relay", "module", "virtual")):
+    if any(term in own_text for term in ("switch", "outlet", "plug", "relay", "module", "virtual")):
         return "switch"
+
+    if any(term in text for term in binary_terms):
+        return "binary_sensor"
     return "sensor"
 
 

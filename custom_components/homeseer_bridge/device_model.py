@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from .sensor_metadata import classify_sensor
 
 
 @dataclass(frozen=True)
@@ -79,8 +80,9 @@ def classify_device(device: dict, ref=None) -> HomeSeerDeviceModel:
         category, confidence = "fan", 80
     elif _contains_any(text, ("motion", "leak", "water sensor", "contact", "door sensor", "window sensor", "door/window", "door window", "smoke", "co sensor", "tamper")):
         category, confidence = "binary_sensor", 85
-    elif _contains_any(text, ("battery", "temperature", "humidity", "illuminance", "lux", "power", "energy", "voltage", "current")):
-        category, confidence = "sensor", 75
+    elif classify_sensor(device).confidence >= 70:
+        sensor_meta = classify_sensor(device)
+        category, confidence = "sensor", sensor_meta.confidence
     elif _contains_any(text, ("dimmer", "light", "lamp", "bulb")):
         category, confidence = "light", 85
     elif "switch" in text or "virtual" in text:

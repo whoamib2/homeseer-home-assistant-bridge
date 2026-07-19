@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.3.0
+
+- Adds native Home Assistant sensor device classes, units, and state classes.
+- Fixes battery and measurement child features inheriting parent classifications.
+- Adds sensor-classification regression tests.
+
+
 ## v4.2.1
 
 - Fixes binary entities remaining in the old state after MQTT 0/255 updates.

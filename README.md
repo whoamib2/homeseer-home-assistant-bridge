@@ -1,5 +1,13 @@
 # HomeSeer Bridge
 
+## v4.3.0 — Native Sensor Classification
+
+- Battery features now become native Home Assistant battery sensors with `%`.
+- Adds native temperature, humidity, illuminance, power, energy, voltage, current, frequency, pressure, CO₂, RSSI, duration, distance, speed, and precipitation classes.
+- Adds measurement and total-increasing state classes where appropriate.
+- Prioritizes each feature's own identity so child sensors do not inherit the parent door, motion, lock, light, or switch type.
+
+
 ## v4.2.1 — MQTT Binary State Fix
 
 - Fixes 0/255 door, motion, contact, and other binary sensors not updating from MQTT.

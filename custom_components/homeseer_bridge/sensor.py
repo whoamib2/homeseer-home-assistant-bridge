@@ -12,6 +12,8 @@ from .helpers import (
     is_excluded,
     sensor_device_class,
     unit_of_measurement,
+    sensor_state_class,
+    sensor_category,
 )
 from .repairs_engine import get_cached_repairs_report
 from .analytics_cache import get_cached_analytics
@@ -81,6 +83,21 @@ class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         return unit_of_measurement(self.device)
+
+    @property
+    def state_class(self):
+        return sensor_state_class(self.device)
+
+    @property
+    def extra_state_attributes(self):
+        attrs = dict(super().extra_state_attributes or {})
+        attrs.update({
+            "homeseer_sensor_device_class": sensor_device_class(self.device),
+            "homeseer_sensor_category": sensor_category(self.device),
+            "homeseer_sensor_unit": unit_of_measurement(self.device),
+            "homeseer_sensor_state_class": sensor_state_class(self.device),
+        })
+        return attrs
 
 
 MONITOR_SENSORS = [
