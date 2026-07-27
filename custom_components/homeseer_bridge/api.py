@@ -148,6 +148,17 @@ def normalize_device(raw: dict, ref: int) -> dict:
             map_key = str(int(numeric_value) if numeric_value.is_integer() else numeric_value)
             value_status_map[map_key] = semantic
 
+    last_known_lock_state = None
+    status_lower_for_lock = str(status or "").strip().lower()
+    if "unsecured" in status_lower_for_lock or "unlocked" in status_lower_for_lock:
+        last_known_lock_state = "unlocked"
+    elif "secured" in status_lower_for_lock or "locked" in status_lower_for_lock:
+        last_known_lock_state = "locked"
+    elif numeric_value in {0, 1, 16, 17, 32, 33}:
+        last_known_lock_state = "unlocked"
+    elif numeric_value == 255:
+        last_known_lock_state = "locked"
+
     return {
         "ref": ref,
         "name": str(name),
@@ -165,6 +176,7 @@ def normalize_device(raw: dict, ref: int) -> dict:
         "labels_blob": " ".join(labels),
         "control_values": values,
         "value_status_map": value_status_map,
+        "last_known_lock_state": last_known_lock_state,
         "raw_text": _flatten_raw(raw),
         "raw": raw,
     }

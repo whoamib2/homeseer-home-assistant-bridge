@@ -64,10 +64,26 @@ class HomeSeerLock(HomeSeerEntityBase, LockEntity):
         return None
 
     @property
+    def is_locking(self):
+        return lock_state(self.device) == "locking"
+
+    @property
+    def is_unlocking(self):
+        return lock_state(self.device) == "unlocking"
+
+    @property
+    def is_jammed(self):
+        return lock_state(self.device) == "jammed"
+
+    @property
     def extra_state_attributes(self):
         attrs = dict(super().extra_state_attributes or {})
         attrs.update(capability_attributes(self.device))
-        attrs["homeseer_lock_state"] = lock_state(self.device)
+        state = lock_state(self.device)
+        if state in {"locked", "unlocked"}:
+            self.device["last_known_lock_state"] = state
+        attrs["homeseer_lock_state"] = state
+        attrs["homeseer_last_known_lock_state"] = self.device.get("last_known_lock_state")
         return attrs
 
     async def async_lock(self, **kwargs):

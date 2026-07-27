@@ -181,6 +181,45 @@ def apply_mqtt_state(device: dict, payload):
     device["value"] = payload
     device["numeric_value"] = numeric
 
+    platform = capability_platform(device)
+
+    # Measurement and battery sensors must retain their raw numeric readings.
+    # They should never be translated to generic On/Off text.
+    if platform == "sensor":
+        device["status"] = status
+        device["status_source"] = "mqtt_numeric_sensor" if numeric is not None else "mqtt_text_sensor"
+        device["semantic_state"] = "measurement" if numeric is not None else "text"
+        return
+
+    # Locks use HomeSeer's lock status vocabulary and numeric values.
+    if platform == "lock":
+        match = resolve_status_text(device, numeric)
+        if match.source == "status_metadata":
+            device["status"] = match.text or status
+        else:
+            lock_numeric = numeric
+            if lock_numeric in {0, 1, 16, 17, 32, 33}:
+                device["status"] = "Unsecured"
+                device["last_known_lock_state"] = "unlocked"
+            elif lock_numeric == 255:
+                device["status"] = "Secured"
+                device["last_known_lock_state"] = "locked"
+            elif lock_numeric == 254:
+                # Preserve the last reliable state instead of oscillating to
+                # Unknown when HomeSeer emits a transient 254.
+                device["status"] = (
+                    "Secured"
+                    if device.get("last_known_lock_state") == "locked"
+                    else "Unsecured"
+                    if device.get("last_known_lock_state") == "unlocked"
+                    else "Unknown"
+                )
+            else:
+                device["status"] = status
+        device["status_source"] = "mqtt_lock"
+        device["semantic_state"] = device.get("last_known_lock_state") or "unknown"
+        return
+
     # Preserve a semantic map learned from HomeSeer's API status/value pair.
     value_status_map = device.setdefault("value_status_map", {})
     if previous_numeric is not None and previous_status:
@@ -191,8 +230,8 @@ def apply_mqtt_state(device: dict, payload):
                 else float(previous_numeric)
             )
             previous_lower = previous_status.strip().lower()
-            inactive_terms = ("closed", "off", "clear", "dry", "no motion", "normal", "idle", "unlocked")
-            active_terms = ("open", "on", "detected", "motion", "wet", "alarm", "smoke", "locked", "tamper")
+            inactive_terms = ("closed", "off", "clear", "dry", "no motion", "normal", "idle", "unlocked", "unsecured")
+            active_terms = ("open", "on", "detected", "motion", "wet", "alarm", "smoke", "locked", "secured", "tamper")
             if any(term in previous_lower for term in inactive_terms):
                 value_status_map[previous_key] = "inactive"
             elif any(term in previous_lower for term in active_terms):
@@ -212,7 +251,6 @@ def apply_mqtt_state(device: dict, payload):
         numeric_key = str(int(numeric) if numeric.is_integer() else numeric)
         semantic = value_status_map.get(numeric_key)
 
-        # Standard mcsMQTT binary payloads. Do not reuse stale API status text.
         if semantic is None and numeric == 0:
             semantic = "inactive"
         elif semantic is None and numeric in {1, 100, 255}:

@@ -1,5 +1,14 @@
 # HomeSeer Bridge
 
+## v4.3.1 — Lock Stability and Battery MQTT Fix
+
+- Maps HomeSeer `Unsecured` and `Secured` terminology to native unlocked/locked states.
+- Supports HomeSeer unsecured variants `0`, `1`, `16`, `17`, `32`, and `33`, plus secured value `255`.
+- Prevents transient HomeSeer value `254` from changing a lock to Unknown when a reliable previous state exists.
+- Keeps battery and measurement MQTT payloads numeric instead of translating them to On/Off.
+- Adds lock transition/jammed properties and additional diagnostics.
+
+
 ## v4.3.0 — Native Sensor Classification
 
 - Battery features now become native Home Assistant battery sensors with `%`.

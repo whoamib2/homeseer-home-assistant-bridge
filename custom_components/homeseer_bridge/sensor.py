@@ -96,6 +96,9 @@ class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
             "homeseer_sensor_category": sensor_category(self.device),
             "homeseer_sensor_unit": unit_of_measurement(self.device),
             "homeseer_sensor_state_class": sensor_state_class(self.device),
+            "homeseer_sensor_raw_value": self.device.get("value"),
+            "homeseer_sensor_numeric_value": self.device.get("numeric_value"),
+            "homeseer_sensor_status_source": self.device.get("status_source"),
         })
         return attrs
 

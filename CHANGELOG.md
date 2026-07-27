@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.3.1
+
+- Fixes locks alternating between Unlocked and Unknown.
+- Maps HomeSeer Secured/Unsecured status values correctly.
+- Preserves the last known lock state during transient value 254 reports.
+- Fixes battery and measurement MQTT payloads being treated as binary states.
+- Adds lock and battery regression tests.
+
+
 ## v4.3.0
 
 - Adds native Home Assistant sensor device classes, units, and state classes.

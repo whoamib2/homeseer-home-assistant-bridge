@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.3.0 adds metadata-priority native sensor classification, units, and state classes.
+Home Assistant custom integration for HomeSeer HS4. Version 4.3.1 fixes HomeSeer Secured/Unsecured lock states, preserves the last reliable state during transient 254 Unknown reports, and keeps battery MQTT updates numeric.

@@ -238,25 +238,38 @@ def binary_is_on(device: dict) -> bool | None:
 
 
 def lock_state(device: dict) -> str | None:
+    """Translate HomeSeer lock terminology and values to HA lock states."""
     match = resolve_status_text(device)
-    text = match.text.lower()
+    text = match.text.lower().strip()
 
+    # Check negative/unsecured forms before secured/locked substrings.
     if "jammed" in text:
         return "jammed"
     if "unlocking" in text:
         return "unlocking"
     if "locking" in text:
         return "locking"
-    if "unlocked" in text:
+    if "unsecured" in text or "unlocked" in text or text == "unlock":
         return "unlocked"
-    if "locked" in text:
+    if "secured" in text or "locked" in text or text == "lock":
         return "locked"
 
     value = match.value
-    if value == 0:
+    if value is None:
+        value = _float(device.get("numeric_value", device.get("value")))
+
+    # HomeSeer Z-Wave door-lock status values:
+    # 0/1/16/17/32/33 are unsecured variants, 255 is secured,
+    # and 254 means HomeSeer temporarily cannot determine the state.
+    if value in {0, 1, 16, 17, 32, 33}:
         return "unlocked"
-    if value == 1:
+    if value == 255:
         return "locked"
+    if value == 254:
+        previous = device.get("last_known_lock_state")
+        if previous in {"locked", "unlocked", "locking", "unlocking", "jammed"}:
+            return previous
+        return None
     return None
 
 
