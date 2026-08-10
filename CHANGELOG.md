@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.3.2
+
+- Fixes battery child features being instantiated as lock entities.
+- Centralizes entity-platform selection on `capability_platform()`.
+- Preserves native lock classification for real Door Lock child features.
+
+
 ## v4.3.1
 
 - Fixes locks alternating between Unlocked and Unknown.

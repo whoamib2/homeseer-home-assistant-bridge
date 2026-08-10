@@ -286,95 +286,28 @@ def has_on_off_controls(device: dict) -> bool:
     )
 
 def is_lock(device: dict) -> bool:
-    text = text_blob(device)
-    labels = str(device.get("labels_blob", "")).lower()
-    return "door lock" in text or " lock" in text or ("locked" in labels and "unlocked" in labels)
+    return capability_platform(device) == "lock"
 
 def is_cover(device: dict) -> bool:
-    text = text_blob(device)
-    labels = str(device.get("labels_blob", "")).lower()
-    return "garage door" in text or "barrier" in text or ("open" in labels and "close" in labels and "garage" in text)
+    return capability_platform(device) == "cover"
 
 def is_binary_sensor(device: dict) -> bool:
-    """Return True for HomeSeer devices that should be HA binary sensors.
-
-    HomeSeer/Z-Wave plugins use several different labels for contact sensors,
-    including "Door/Window", "Door Window", "Notification", and "Contact".
-    """
-    text = text_blob(device)
-    binary_terms = [
-        "motion",
-        "contact",
-        "leak",
-        "smoke",
-        "co sensor",
-        "carbon monoxide",
-        "water sensor",
-        "door sensor",
-        "window sensor",
-        "door/window",
-        "door window",
-        "door-window",
-        "opening sensor",
-        "tamper",
-    ]
-    return any(term in text for term in binary_terms)
+    return capability_platform(device) == "binary_sensor"
 
 def is_fan(device: dict) -> bool:
-    text = text_blob(device)
-    return " fan" in text and has_on_off_controls(device) and not is_binary_sensor(device)
+    return capability_platform(device) == "fan"
 
 def is_dimmer(device: dict) -> bool:
-    text = text_blob(device)
-    labels = str(device.get("labels_blob", "")).lower()
-    return (
-        ("dimmer" in text or "multilevel" in text or "level" in labels or "dim" in labels)
-        and not is_lock(device)
-        and not is_cover(device)
-    )
+    # Historical helper name retained for light.py compatibility.
+    return capability_platform(device) == "light"
 
 def is_controllable_switch(device: dict) -> bool:
     if device.get("hide"):
         return False
-
-    if is_lock(device) or is_cover(device) or is_binary_sensor(device) or is_fan(device) or is_dimmer(device):
-        return False
-
-    text = text_blob(device)
-
-    if has_on_off_controls(device):
-        if any(k in text for k in [
-            "switch",
-            "outlet",
-            "plug",
-            "module",
-            "relay",
-            "light",
-            "lamp",
-            "valve",
-            "water valve",
-            "pump",
-            "siren",
-            "appliance",
-            "scene",
-            "virtual",
-        ]):
-            return True
-
-    if any(k in text for k in ["valve", "water valve", "switch binary", "switch", "outlet", "plug", "relay", "module"]):
-        return True
-
-    return False
+    return capability_platform(device) == "switch"
 
 def is_plain_sensor(device: dict) -> bool:
-    return not (
-        is_controllable_switch(device)
-        or is_dimmer(device)
-        or is_lock(device)
-        or is_cover(device)
-        or is_binary_sensor(device)
-        or is_fan(device)
-    )
+    return capability_platform(device) == "sensor"
 
 def binary_device_class(device: dict) -> str | None:
     return binary_device_class_from_metadata(device)

@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.3.1 fixes HomeSeer Secured/Unsecured lock states, preserves the last reliable state during transient 254 Unknown reports, and keeps battery MQTT updates numeric.
+Home Assistant custom integration for HomeSeer HS4. Version 4.3.2 fixes entity-platform classification so battery child features remain native battery sensors rather than inheriting the parent lock platform.

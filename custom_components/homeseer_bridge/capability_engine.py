@@ -150,19 +150,30 @@ def metadata_text(device: dict) -> str:
 
 
 def capability_platform(device: dict) -> str:
-    """Determine the HA platform using the feature's own identity first."""
+    """Determine HA platform from the feature itself before parent/raw metadata."""
     text = metadata_text(device)
     own_text = " ".join(
         str(device.get(key) or "").lower()
-        for key in ("name", "device_type", "interface", "relationship", "status")
+        for key in (
+            "name", "device_type", "device_type_string",
+            "interface", "relationship", "status"
+        )
     )
 
-    # Battery and measurement children must not inherit their parent's type.
+    # Battery/temperature/power/etc. children stay sensors even when their
+    # parent's raw metadata contains lock, door, motion, or switch terms.
     if is_strong_sensor_feature(device):
         return "sensor"
 
-    if has_control_use(device, "doorlock", "doorunlock") or (
-        "locked" in own_text and "unlocked" in own_text and "lock" in own_text
+    # HomeSeer lock children commonly use "Door Lock" and Secured/Unsecured.
+    if (
+        has_control_use(device, "doorlock", "doorunlock")
+        or "door lock" in own_text
+        or "deadbolt" in own_text
+        or (
+            "lock" in own_text
+            and any(term in own_text for term in ("secured", "unsecured", "locked", "unlocked"))
+        )
     ):
         return "lock"
 
@@ -185,10 +196,10 @@ def capability_platform(device: dict) -> str:
     if any(term in own_text for term in ("switch", "outlet", "plug", "relay", "module", "virtual")):
         return "switch"
 
+    # Parent/raw metadata is fallback only.
     if any(term in text for term in binary_terms):
         return "binary_sensor"
     return "sensor"
-
 
 def binary_is_on(device: dict) -> bool | None:
     """Return a binary state without allowing stale HomeSeer text to win.

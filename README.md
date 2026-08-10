@@ -1,5 +1,13 @@
 # HomeSeer Bridge
 
+## v4.3.2 — Battery Platform Classification Fix
+
+- Fixes Z-Wave lock battery child features appearing as Home Assistant lock entities.
+- Makes every entity platform use the same centralized capability classifier.
+- A feature such as `Front Door Lock - Battery` now becomes a native Battery sensor even though its parent is a lock.
+- Real `Door Lock` child features remain native lock entities.
+
+
 ## v4.3.1 — Lock Stability and Battery MQTT Fix
 
 - Maps HomeSeer `Unsecured` and `Secured` terminology to native unlocked/locked states.
