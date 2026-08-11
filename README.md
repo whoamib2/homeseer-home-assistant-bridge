@@ -1,5 +1,14 @@
 # HomeSeer Bridge
 
+## v4.3.3 — Source-Level Exclusions and Registry Cleanup
+
+- Excluded HomeSeer features are dropped immediately after API retrieval and never enter active bridge state.
+- Excluded features no longer receive MQTT state processing, analytics, repairs, or activity tracking.
+- Existing excluded Home Assistant devices are automatically removed from the device registry on integration reload.
+- Manual device deletion is now supported and creates a durable `ref:<HomeSeerRef>` exclusion so the device does not return.
+- New-install defaults also exclude UltraWeatherWU3/Narrative noise in addition to August, YoLink, and Shelly.
+
+
 ## v4.3.2 — Battery Platform Classification Fix
 
 - Fixes Z-Wave lock battery child features appearing as Home Assistant lock entities.

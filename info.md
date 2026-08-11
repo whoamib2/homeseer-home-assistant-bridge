@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.3.2 fixes entity-platform classification so battery child features remain native battery sensors rather than inheriting the parent lock platform.
+Home Assistant custom integration for HomeSeer HS4. Version 4.3.3 adds source-level exclusions, automatic cleanup of excluded HA devices/entities, silent dropping of excluded MQTT traffic, and durable manual device removal.

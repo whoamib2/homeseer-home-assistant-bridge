@@ -160,12 +160,48 @@ def text_blob(device: dict) -> str:
     ]).lower()
 
 def excluded_terms(entry) -> list[str]:
-    raw = entry.options.get(CONF_EXCLUDED_TERMS, entry.data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS))
+    raw = entry.options.get(
+        CONF_EXCLUDED_TERMS,
+        entry.data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS),
+    )
     return [x.strip().lower() for x in str(raw).split(",") if x.strip()]
 
+
 def is_excluded(device: dict, entry) -> bool:
+    """Return True when a feature is excluded by text or exact HomeSeer ref.
+
+    Text exclusions match the feature metadata blob. A token like ``ref:3174``
+    is an exact, durable exclusion used when a user manually removes a device
+    from Home Assistant.
+    """
+    ref = device.get("ref") or device.get("Ref")
+    ref_text = str(ref) if ref is not None else ""
     text = text_blob(device)
-    return any(term in text for term in excluded_terms(entry))
+
+    for term in excluded_terms(entry):
+        if term.startswith("ref:"):
+            if term[4:].strip() == ref_text:
+                return True
+            continue
+        if term in text:
+            return True
+    return False
+
+
+def split_excluded_devices(
+    devices: dict[int, dict], entry
+) -> tuple[dict[int, dict], dict[int, dict]]:
+    """Split HomeSeer data into active and excluded state dictionaries."""
+    included: dict[int, dict] = {}
+    excluded: dict[int, dict] = {}
+
+    for ref, device in devices.items():
+        if is_excluded(device, entry):
+            excluded[ref] = device
+        else:
+            included[ref] = device
+
+    return included, excluded
 
 def parse_payload(payload) -> tuple[float | None, str]:
     status = str(payload).strip()

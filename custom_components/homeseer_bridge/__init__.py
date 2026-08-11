@@ -10,6 +10,7 @@ from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -23,6 +24,7 @@ from .const import (
     CONF_ENABLE_DEBUG_LOGGING,
     CONF_ACTIVITY_EXCLUDED_TERMS,
     DEFAULT_ACTIVITY_EXCLUDED_TERMS,
+    DEFAULT_EXCLUDED_TERMS,
     DEFAULT_ENABLE_DEBUG_LOGGING,
     CONF_REFRESH_INTERVAL_SECONDS,
     DEFAULT_REFRESH_INTERVAL_SECONDS,
@@ -31,7 +33,14 @@ from .const import (
     CONF_VIRTUAL_POLL_INTERVAL_SECONDS,
     DEFAULT_VIRTUAL_POLL_INTERVAL_SECONDS,
 )
-from .helpers import apply_mqtt_state, build_topic_lookup, mqtt_prefix, topic_to_ref
+from .helpers import (
+    apply_mqtt_state,
+    build_topic_lookup,
+    excluded_terms,
+    mqtt_prefix,
+    split_excluded_devices,
+    topic_to_ref,
+)
 from .dashboard import async_ensure_dashboard
 from .area_apply import async_apply_suggested_areas
 from .repairs_engine import update_cached_repairs_report
@@ -97,6 +106,45 @@ def _is_virtual_device(device: dict) -> bool:
     )
 
 
+async def _async_cleanup_excluded_registry_devices(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    excluded_state: dict[int, dict],
+) -> int:
+    """Remove excluded HomeSeer refs from HA's device/entity registries.
+
+    Device removal also removes the entities associated with that device.
+    This runs on the event loop and uses the config-entry-scoped registry API.
+    """
+    if not excluded_state:
+        return 0
+
+    device_registry = dr.async_get(hass)
+    removed = 0
+
+    for ref in excluded_state:
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(ref)),
+            entry.entry_id,
+        )
+        if device is None:
+            continue
+        device_registry.async_remove_device(device.id)
+        removed += 1
+
+    if removed:
+        _LOGGER.info(
+            "HomeSeer Bridge removed %s excluded device(s) from the HA registry",
+            removed,
+        )
+    return removed
+
+
+def _split_source_state(devices: dict[int, dict], entry: ConfigEntry):
+    """Apply source-level exclusions immediately after HomeSeer API retrieval."""
+    return split_excluded_devices(devices, entry)
+
+
 async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: HomeSeerApi, debug_logging: bool) -> int:
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not data:
@@ -104,13 +152,24 @@ async def _refresh_from_homeseer(hass: HomeAssistant, entry: ConfigEntry, api: H
 
     stats = ensure_stats(data)
     start = monotonic()
-    fresh_state = await api.async_get_status()
+    full_state = await api.async_get_status()
+    fresh_state, excluded_state = _split_source_state(full_state, entry)
     record_latency_ms(stats, "api_latency_ms", start)
     mark_api_refresh(stats)
     refresh_derived_stats(stats)
     changed_refs: list[int] = []
     new_refs: list[int] = []
     current_state = data["state"]
+
+    # Excluded refs are not allowed to remain in runtime state.
+    for ref in list(current_state):
+        if ref in excluded_state:
+            current_state.pop(ref, None)
+
+    data["excluded_state"] = excluded_state
+    data["excluded_topic_lookup"] = build_topic_lookup(excluded_state, entry)
+    data["stats"]["source_devices_seen"] = len(full_state)
+    data["stats"]["excluded_devices"] = len(excluded_state)
 
     for ref, new_device in fresh_state.items():
         old_device = current_state.get(ref)
@@ -163,7 +222,8 @@ async def _poll_virtual_devices(hass: HomeAssistant, entry: ConfigEntry, api: Ho
 
     stats = ensure_stats(data)
     start = monotonic()
-    fresh_state = await api.async_get_status()
+    full_state = await api.async_get_status()
+    fresh_state, _excluded_state = _split_source_state(full_state, entry)
     record_latency_ms(stats, "virtual_poll_latency_ms", start)
     mark_virtual_poll(stats)
     refresh_derived_stats(stats)
@@ -211,15 +271,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     api = HomeSeerApi(session, entry.data[CONF_HS_URL])
 
-    state = await api.async_get_status()
+    full_state = await api.async_get_status()
+    state, excluded_state = _split_source_state(full_state, entry)
+
+    # Purge previously-created HA devices for anything now excluded before
+    # entity platforms are set up, so they do not immediately reappear.
+    excluded_registry_removed = await _async_cleanup_excluded_registry_devices(
+        hass, entry, excluded_state
+    )
+
     topic_lookup = build_topic_lookup(state, entry)
+    excluded_topic_lookup = build_topic_lookup(excluded_state, entry)
     virtual_refs = {ref for ref, device in state.items() if _is_virtual_device(device)}
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "state": state,
+        "excluded_state": excluded_state,
         "topic_lookup": topic_lookup,
+        "excluded_topic_lookup": excluded_topic_lookup,
         "virtual_refs": virtual_refs,
         "unsub": None,
         "unsub_refresh": None,
@@ -230,6 +301,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "reload_scheduled": False,
         "stats": {
             "mqtt_updates": 0,
+            "excluded_mqtt_drops": 0,
+            "source_devices_seen": len(full_state),
+            "excluded_devices": len(excluded_state),
+            "excluded_registry_removed": excluded_registry_removed,
             "api_refreshes": 0,
             "last_refresh_changed": 0,
             "last_refresh_devices": len(state),
@@ -274,6 +349,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ref = topic_to_ref(msg.topic, data["topic_lookup"])
 
         if ref is None:
+            excluded_ref = topic_to_ref(
+                msg.topic,
+                data.get("excluded_topic_lookup", {}),
+            )
+            if excluded_ref is not None:
+                data["stats"]["excluded_mqtt_drops"] = (
+                    data["stats"].get("excluded_mqtt_drops", 0) + 1
+                )
+                return
+
             unmatched = data.setdefault("unmatched_topics", {})
             unmatched[str(msg.topic)] = str(msg.payload)
             if len(unmatched) > 200:
@@ -411,23 +496,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("HomeSeer Bridge area apply result: %s", result)
 
     async def handle_reload_devices(call: ServiceCall):
-        fresh_state = await api.async_get_status()
+        full_state = await api.async_get_status()
+        fresh_state, excluded_state = _split_source_state(full_state, entry)
         data = hass.data[DOMAIN][entry.entry_id]
-        data["state"].update(fresh_state)
-        data["topic_lookup"] = build_topic_lookup(data["state"], entry)
-        data["virtual_refs"] = {ref for ref, device in data["state"].items() if _is_virtual_device(device)}
+
+        removed = await _async_cleanup_excluded_registry_devices(
+            hass, entry, excluded_state
+        )
+
+        # Replace instead of update so excluded/stale refs disappear immediately.
+        data["state"] = fresh_state
+        data["excluded_state"] = excluded_state
+        data["topic_lookup"] = build_topic_lookup(fresh_state, entry)
+        data["excluded_topic_lookup"] = build_topic_lookup(excluded_state, entry)
+        data["virtual_refs"] = {
+            ref for ref, device in fresh_state.items() if _is_virtual_device(device)
+        }
         data["stats"]["manual_reloads"] += 1
+        data["stats"]["source_devices_seen"] = len(full_state)
+        data["stats"]["excluded_devices"] = len(excluded_state)
+        data["stats"]["excluded_registry_removed"] = (
+            data["stats"].get("excluded_registry_removed", 0) + removed
+        )
         data["stats"]["last_refresh_devices"] = len(fresh_state)
         data["stats"]["virtual_devices"] = len(data["virtual_refs"])
         data["stats"]["last_api_ok"] = True
         data["stats"]["consecutive_api_failures"] = 0
         data["reload_scheduled"] = False
+        update_cached_repairs_report(data, force=True)
         update_cached_analytics(data, force=True)
+
         for ref in fresh_state:
             hass.loop.call_soon_threadsafe(
-                async_dispatcher_send, hass, f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}"
+                async_dispatcher_send,
+                hass,
+                f"{SIGNAL_STATE_UPDATED}_{entry.entry_id}_{ref}",
             )
-        _LOGGER.info("Manual HomeSeer device reload completed; devices=%s cached=%s virtual=%s", len(fresh_state), len(data["state"]), len(data["virtual_refs"]))
+
+        _LOGGER.info(
+            "Manual HomeSeer reload: source=%s active=%s excluded=%s removed=%s virtual=%s",
+            len(full_state),
+            len(fresh_state),
+            len(excluded_state),
+            removed,
+            len(data["virtual_refs"]),
+        )
 
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH_ALL):
         hass.services.async_register(DOMAIN, SERVICE_REFRESH_ALL, handle_refresh_all)
@@ -453,12 +566,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v3.6.1 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v4.3.3 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry,
+) -> bool:
+    """Allow manual HA device removal and make it durable via ref exclusion."""
+    ref = None
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN or identifier == "bridge":
+            continue
+        try:
+            ref = int(identifier)
+            break
+        except (TypeError, ValueError):
+            continue
+
+    if ref is None:
+        return False
+
+    token = f"ref:{ref}"
+    current_terms = excluded_terms(config_entry)
+    if token not in current_terms:
+        options = dict(config_entry.options)
+        configured = options.get(
+            CONF_EXCLUDED_TERMS,
+            config_entry.data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS),
+        )
+        terms = [part.strip() for part in str(configured).split(",") if part.strip()]
+        terms.append(token)
+        options[CONF_EXCLUDED_TERMS] = ",".join(terms)
+        hass.config_entries.async_update_entry(config_entry, options=options)
+
+    data = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
+    if data:
+        data.get("state", {}).pop(ref, None)
+        data["topic_lookup"] = build_topic_lookup(data.get("state", {}), config_entry)
+
+    _LOGGER.info(
+        "HomeSeer Bridge manually removed ref %s and added durable exclusion %s",
+        ref,
+        token,
+    )
     return True
 
 

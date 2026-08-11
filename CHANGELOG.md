@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.3.3
+
+- Adds source-level exclusion before bridge state/topic maps are built.
+- Automatically removes excluded devices and their entities from Home Assistant's registry on reload.
+- Silently drops MQTT messages belonging to excluded refs instead of recording them as unmatched.
+- Adds durable manual device deletion using `ref:<id>` exclusions.
+- Adds exclusion cleanup statistics and UltraWeatherWU3/Narrative to new-install defaults.
+
+
 ## v4.3.2
 
 - Fixes battery child features being instantiated as lock entities.

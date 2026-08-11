@@ -105,6 +105,10 @@ class HomeSeerSensor(HomeSeerEntityBase, SensorEntity):
 
 MONITOR_SENSORS = [
     ("devices_loaded", "HomeSeer Bridge Devices", None),
+    ("source_devices_seen", "HomeSeer Bridge Source Devices Seen", None),
+    ("excluded_devices", "HomeSeer Bridge Excluded Devices", None),
+    ("excluded_registry_removed", "HomeSeer Bridge Excluded Registry Devices Removed", None),
+    ("excluded_mqtt_drops", "HomeSeer Bridge Excluded MQTT Messages Dropped", None),
     ("virtual_devices", "HomeSeer Bridge Virtual Devices", None),
     ("mqtt_updates", "HomeSeer Bridge MQTT Updates", None),
     ("api_refreshes", "HomeSeer Bridge API Refreshes", None),
