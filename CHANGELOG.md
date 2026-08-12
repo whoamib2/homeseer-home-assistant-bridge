@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.3.4
+
+- Restores valve/water-valve/pump/siren/appliance classification as controllable switches.
+- Uses CAPI ControlUse/Label metadata for actual On and Off command values.
+- Fixes reversed devices where 0 means On and 255 means Off.
+- Removes the switch-state assumption that every positive numeric value is On.
+- Adds valve/control-mapping regression tests.
+
+
 ## v4.3.3
 
 - Adds source-level exclusion before bridge state/topic maps are built.

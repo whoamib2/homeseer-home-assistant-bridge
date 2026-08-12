@@ -1,5 +1,14 @@
 # HomeSeer Bridge
 
+## v4.3.4 — Valve Classification and Reversed On/Off Mapping Fix
+
+- Restores water valves, valves, pumps, sirens, appliances, and similar controllable HomeSeer features as switch entities.
+- Uses HomeSeer CAPI `ControlUse` metadata to determine the real On and Off command values.
+- Supports devices with reversed mappings such as `0 = On` and `255 = Off`.
+- Switch state now follows HomeSeer status/control metadata instead of assuming every positive value means On.
+- Includes regression coverage for the Kitchen Water Valve pattern shown by HomeSeer ref 1055.
+
+
 ## v4.3.3 — Source-Level Exclusions and Registry Cleanup
 
 - Excluded HomeSeer features are dropped immediately after API retrieval and never enter active bridge state.

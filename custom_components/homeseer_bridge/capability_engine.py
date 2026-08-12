@@ -193,7 +193,17 @@ def capability_platform(device: dict) -> str:
         return "fan"
     if any(term in own_text for term in ("dimmer", "multilevel", "light", "lamp", "bulb")):
         return "light"
-    if any(term in own_text for term in ("switch", "outlet", "plug", "relay", "module", "virtual")):
+    switch_terms = (
+        "switch", "outlet", "plug", "relay", "module", "virtual",
+        "valve", "water valve", "water shutoff", "shutoff valve",
+        "solenoid", "pump", "siren", "appliance", "scene",
+    )
+    if any(term in own_text for term in switch_terms):
+        return "switch"
+
+    # A feature with explicit HomeSeer On/Off ControlUse metadata is also a
+    # controllable switch unless a more specific platform matched above.
+    if has_control_use(device, "on") and has_control_use(device, "off"):
         return "switch"
 
     # Parent/raw metadata is fallback only.

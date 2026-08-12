@@ -56,7 +56,7 @@ def classify_sensor(device: dict) -> SensorMetadata:
         unit = "Wh" if _contains(text, "wh", "watt hour") and "kwh" not in text else "kWh"
         return SensorMetadata("energy", unit, "total_increasing", "energy", 96)
 
-    if _contains(text, "apparent power", "volt amp", " va"):
+    if _contains(text, "apparent power", "volt ampere", "volt-ampere", "volt amp"):
         return SensorMetadata("apparent_power", "VA", "measurement", "apparent_power", 95)
 
     if _contains(text, "reactive power", "var"):

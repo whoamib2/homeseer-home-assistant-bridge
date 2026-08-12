@@ -4,7 +4,13 @@ import re
 
 from .topic_map import REF_TO_TOPICS
 from .device_model import classify_device
-from .capability_engine import capability_platform, resolve_status_text, binary_device_class_from_metadata
+from .capability_engine import (
+    binary_device_class_from_metadata,
+    capability_platform,
+    control_value_for_use,
+    has_control_use,
+    resolve_status_text,
+)
 from .sensor_metadata import classify_sensor
 
 from .const import (
@@ -305,6 +311,10 @@ def apply_mqtt_state(device: dict, payload):
         device["status_source"] = "mqtt_text"
 
 def has_on_off_controls(device: dict) -> bool:
+    """Detect an On/Off feature without assuming which numeric value means On."""
+    if has_control_use(device, "on") and has_control_use(device, "off"):
+        return True
+
     labels = str(device.get("labels_blob", "")).lower()
     values = set()
 
@@ -360,9 +370,45 @@ def sensor_state_class(device: dict) -> str | None:
 def sensor_category(device: dict) -> str:
     return classify_sensor(device).category
 
-def on_value(device: dict):
-    values = set()
+def _control_value_for_label(device: dict, wanted_label: str):
+    """Find a CAPI control value by its human-readable Label/Status text."""
+    wanted = str(wanted_label).strip().lower()
+    for pair in device.get("controls") or []:
+        if not isinstance(pair, dict):
+            continue
+        label = ""
+        for key in ("Label", "label", "Status", "status", "Text", "text"):
+            value = pair.get(key)
+            if value is not None and str(value).strip():
+                label = str(value).strip().lower()
+                break
+        if label != wanted:
+            continue
 
+        for key in ("Value", "value", "Start", "start", "TargetValue", "target_value"):
+            if key not in pair:
+                continue
+            try:
+                numeric = float(pair[key])
+                return int(numeric) if numeric.is_integer() else numeric
+            except (TypeError, ValueError):
+                return pair[key]
+    return None
+
+
+def on_value(device: dict):
+    """Return the actual HomeSeer value used by the On control.
+
+    HomeSeer devices are not guaranteed to use 255=On/0=Off. Some valves use
+    the reverse mapping, such as 0=On and 255=Off.
+    """
+    value = control_value_for_use(device, "on")
+    if value is None:
+        value = _control_value_for_label(device, "on")
+    if value is not None:
+        return value
+
+    values = set()
     for v in device.get("control_values", []):
         try:
             values.add(int(float(v)))
@@ -377,5 +423,56 @@ def on_value(device: dict):
         return 1
     return 255
 
+
 def off_value(device: dict):
+    """Return the actual HomeSeer value used by the Off control."""
+    value = control_value_for_use(device, "off")
+    if value is None:
+        value = _control_value_for_label(device, "off")
+    if value is not None:
+        return value
     return 0
+
+
+def switch_is_on(device: dict) -> bool | None:
+    """Resolve switch state using CAPI mappings before numeric assumptions."""
+    numeric = device.get("numeric_value", device.get("value"))
+    try:
+        numeric = float(numeric)
+    except (TypeError, ValueError):
+        numeric = None
+
+    on = on_value(device)
+    off = off_value(device)
+
+    try:
+        on_numeric = float(on)
+    except (TypeError, ValueError):
+        on_numeric = None
+    try:
+        off_numeric = float(off)
+    except (TypeError, ValueError):
+        off_numeric = None
+
+    if numeric is not None:
+        if on_numeric is not None and numeric == on_numeric:
+            return True
+        if off_numeric is not None and numeric == off_numeric:
+            return False
+
+    match = resolve_status_text(device, numeric)
+    if match.semantic == "active":
+        return True
+    if match.semantic == "inactive":
+        return False
+
+    status = str(device.get("status") or "").strip().lower()
+    if status in {"on", "open", "active"}:
+        return True
+    if status in {"off", "closed", "inactive"}:
+        return False
+
+    # Last-resort compatibility fallback only when no CAPI mapping is known.
+    if numeric is not None and on_numeric is None and off_numeric is None:
+        return numeric > 0
+    return None

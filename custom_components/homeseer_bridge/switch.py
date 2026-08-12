@@ -9,7 +9,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, SIGNAL_NEW_DEVICES
 from .entity_base import HomeSeerEntityBase
-from .helpers import is_controllable_switch, is_excluded, on_value, off_value
+from .helpers import (
+    is_controllable_switch,
+    is_excluded,
+    off_value,
+    on_value,
+    switch_is_on,
+)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
@@ -55,17 +61,17 @@ class HomeSeerSwitch(HomeSeerEntityBase, SwitchEntity):
 
     @property
     def is_on(self):
-        value = self.device.get("numeric_value")
-        status = str(self.device.get("status", "")).strip().lower()
-        if value is not None:
-            return value > 0
-        return status in ("on", "open", "unlocked", "active")
+        return switch_is_on(self.device)
 
     async def async_turn_on(self, **kwargs):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
         value = on_value(self.device)
         await api.async_control_device_by_value(self.ref, value)
-        self.device["numeric_value"] = float(value)
+        try:
+            self.device["numeric_value"] = float(value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = value
         self.device["status"] = "On"
         self.async_write_ha_state()
 
@@ -73,6 +79,10 @@ class HomeSeerSwitch(HomeSeerEntityBase, SwitchEntity):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
         value = off_value(self.device)
         await api.async_control_device_by_value(self.ref, value)
-        self.device["numeric_value"] = float(value)
+        try:
+            self.device["numeric_value"] = float(value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = value
         self.device["status"] = "Off"
         self.async_write_ha_state()
