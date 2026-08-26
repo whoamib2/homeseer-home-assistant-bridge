@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.3.7
+
+- Uses HomeSeer's `controldevicebycontroluse` endpoint for covers that expose CAPI On/Off control pairs.
+- Maps Open to ControlUse On (1) and Close to ControlUse Off (2), which supports virtual devices such as ref 1094 (`0 = Closed`, `100 = Open`).
+- Re-reads the exact HomeSeer ref after every cover command and only reports the verified HomeSeer state back to Home Assistant.
+- Removes optimistic Open/Closed updates that could make HA appear correct while HomeSeer never changed.
+- Raises a Home Assistant error when HomeSeer does not actually reach the requested state.
+
 ## v4.3.6
 
 - Makes cover/garage-door commands use HomeSeer CAPI control metadata instead of hard-coded 255/0 values.

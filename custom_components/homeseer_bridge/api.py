@@ -35,6 +35,47 @@ class HomeSeerApi:
             except Exception:
                 return await resp.text()
 
+    async def async_control_device_by_control_use(self, ref: int, control_use: int):
+        """Control a HomeSeer CAPI pair by ControlUse."""
+        params = urlencode(
+            {
+                "request": "controldevicebycontroluse",
+                "ref": ref,
+                "controluse": control_use,
+            }
+        )
+        url = f"{self.base_url}/JSON?{params}"
+        async with self.session.get(url, timeout=15) as resp:
+            resp.raise_for_status()
+            try:
+                return await resp.json(content_type=None)
+            except Exception:
+                return await resp.text()
+
+    async def async_get_device_status(self, ref: int) -> dict | None:
+        """Fetch and normalize one HomeSeer ref for post-control verification."""
+        params = urlencode(
+            {
+                "request": "getstatus",
+                "ref": ref,
+                "everything": "true",
+            }
+        )
+        url = f"{self.base_url}/JSON?{params}"
+        async with self.session.get(url, timeout=15) as resp:
+            resp.raise_for_status()
+            data = await resp.json(content_type=None)
+
+        for raw in data.get("Devices", data.get("devices", [])):
+            raw_ref = raw.get("ref") or raw.get("Ref") or raw.get("REF")
+            try:
+                raw_ref = int(raw_ref)
+            except (TypeError, ValueError):
+                continue
+            if raw_ref == int(ref):
+                return normalize_device(raw, raw_ref)
+        return None
+
 def _first(raw: dict, *keys, default=None):
     for key in keys:
         if key in raw and raw[key] is not None:

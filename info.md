@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.6 adds metadata-driven cover/garage-door control values so virtual switches such as 0=Closed and 100=Open control correctly from Home Assistant.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.7 uses HomeSeer's ControlUse API for cover commands and verifies the real HomeSeer state after each command.

@@ -3,6 +3,7 @@ from __future__ import annotations
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -125,26 +126,57 @@ class HomeSeerCover(HomeSeerEntityBase, CoverEntity):
         attrs.update(capability_attributes(self.device))
         return attrs
 
-    async def async_open_cover(self, **kwargs):
+    async def _async_control_and_verify(
+        self,
+        *,
+        control_use: int,
+        fallback_value,
+        expected_open: bool,
+    ) -> None:
+        """Control HomeSeer, then publish only the state HomeSeer reports."""
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
-        value = cover_open_value(self.device)
-        await api.async_control_device_by_value(self.ref, value)
-        try:
-            self.device["numeric_value"] = float(value)
-        except (TypeError, ValueError):
-            self.device["numeric_value"] = None
-        self.device["value"] = value
-        self.device["status"] = "Open"
+
+        # HomeSeer JSON API ePairControlUse: On=1, Off=2.
+        # Virtual garage-state devices often use these control pairs even when
+        # their numeric values are non-standard (for ref 1094: Open=100).
+        use_name = "on" if expected_open else "off"
+        if control_value_for_use(self.device, use_name) is not None:
+            await api.async_control_device_by_control_use(self.ref, control_use)
+        else:
+            await api.async_control_device_by_value(self.ref, fallback_value)
+
+        actual = await api.async_get_device_status(self.ref)
+        if actual is None:
+            raise HomeAssistantError(
+                f"HomeSeer did not return status for ref {self.ref} after control"
+            )
+
+        self.device.clear()
+        self.device.update(actual)
+
+        match = resolve_status_text(self.device)
+        text = match.text.lower()
+        is_open = True if "open" in text else False if "closed" in text else None
+
         self.async_write_ha_state()
 
+        if is_open is not expected_open:
+            requested = "open" if expected_open else "close"
+            raise HomeAssistantError(
+                f"HomeSeer ref {self.ref} did not {requested}; "
+                f"reported state is {match.text or self.device.get('value')}"
+            )
+
+    async def async_open_cover(self, **kwargs):
+        await self._async_control_and_verify(
+            control_use=1,
+            fallback_value=cover_open_value(self.device),
+            expected_open=True,
+        )
+
     async def async_close_cover(self, **kwargs):
-        api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
-        value = cover_close_value(self.device)
-        await api.async_control_device_by_value(self.ref, value)
-        try:
-            self.device["numeric_value"] = float(value)
-        except (TypeError, ValueError):
-            self.device["numeric_value"] = None
-        self.device["value"] = value
-        self.device["status"] = "Closed"
-        self.async_write_ha_state()
+        await self._async_control_and_verify(
+            control_use=2,
+            fallback_value=cover_close_value(self.device),
+            expected_open=False,
+        )
