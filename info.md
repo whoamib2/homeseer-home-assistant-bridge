@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.5 makes dashboard creation opt-in through Lovelace APIs, uses neutral setup defaults, and reduces default fallback polling load.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.6 adds metadata-driven cover/garage-door control values so virtual switches such as 0=Closed and 100=Open control correctly from Home Assistant.

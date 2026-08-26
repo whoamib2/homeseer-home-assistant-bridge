@@ -11,6 +11,7 @@ It is designed for large HomeSeer installations and focuses on local control, fa
 - Native lights, switches, sensors, binary sensors, locks, covers, and fans
 - Metadata-driven Home Assistant device classes and units
 - HomeSeer CAPI-aware control values and semantic states
+- Metadata-driven cover commands, including virtual garage-door state controls
 - Configurable source-level exclusions
 - Bridge health, latency, reconnect, MQTT, and discovery diagnostics
 - Smart Device Model classification

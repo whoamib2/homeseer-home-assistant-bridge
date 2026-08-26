@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.3.6
+
+- Makes cover/garage-door commands use HomeSeer CAPI control metadata instead of hard-coded 255/0 values.
+- Supports virtual garage-door state devices such as ref 1094 where `0 = Closed` and `100 = Open`.
+- Uses ControlUse `On`/`Off` first, then Open/Close labels, with 255/0 only as a compatibility fallback.
+- Keeps Home Assistant state synchronized immediately after direct HomeSeer API control.
+
 ## v4.3.5
 
 - Removes automatic dashboard creation from integration setup; dashboard creation is now opt-in through `homeseer_bridge.create_dashboard`.
