@@ -3,18 +3,27 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from homeassistant.components import frontend
+from homeassistant.components.lovelace import dashboard
+from homeassistant.components.lovelace.const import (
+    CONF_ICON,
+    CONF_REQUIRE_ADMIN,
+    CONF_SHOW_IN_SIDEBAR,
+    CONF_TITLE,
+    CONF_URL_PATH,
+    DOMAIN as LOVELACE_DOMAIN,
+    LOVELACE_DATA,
+    MODE_STORAGE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import collection
 
 _LOGGER = logging.getLogger(__name__)
 
-DASHBOARD_ID = "homeseer_bridge"
 DASHBOARD_URL_PATH = "homeseer-bridge"
 DASHBOARD_TITLE = "HomeSeer Bridge"
 DASHBOARD_ICON = "mdi:home-automation"
-
-DASHBOARDS_STORAGE_KEY = "lovelace_dashboards"
-DASHBOARD_CONFIG_STORAGE_KEY = f"lovelace.{DASHBOARD_URL_PATH}"
 
 
 def _dashboard_config() -> dict[str, Any]:
@@ -76,41 +85,70 @@ def _dashboard_config() -> dict[str, Any]:
 
 
 async def async_ensure_dashboard(hass: HomeAssistant) -> bool:
+    """Create the optional dashboard via Lovelace collection/config APIs.
+
+    This is intentionally user-initiated through the create_dashboard service.
+    The integration never creates or modifies a dashboard during setup.
+    """
+    lovelace_data = hass.data.get(LOVELACE_DATA)
+    if lovelace_data is None:
+        _LOGGER.warning("Lovelace is not loaded; cannot create HomeSeer Bridge dashboard")
+        return False
+
+    if DASHBOARD_URL_PATH in lovelace_data.dashboards:
+        _LOGGER.debug("HomeSeer Bridge dashboard already exists; not modifying it")
+        return False
+
+    dashboards_collection = dashboard.DashboardsCollection(hass)
+    await dashboards_collection.async_load()
+
+    for item in dashboards_collection.async_items():
+        if item.get(CONF_URL_PATH) == DASHBOARD_URL_PATH or item.get(CONF_TITLE) == DASHBOARD_TITLE:
+            _LOGGER.debug("HomeSeer Bridge dashboard already exists in Lovelace storage")
+            return False
+
+    async def dashboard_changed(change_type: str, item_id: str, item: dict[str, Any]) -> None:
+        """Coordinate the new collection item with the running Lovelace frontend."""
+        if change_type != collection.CHANGE_ADDED or item.get(CONF_URL_PATH) != DASHBOARD_URL_PATH:
+            return
+
+        storage_dashboard = dashboard.LovelaceStorage(hass, item)
+        lovelace_data.dashboards[DASHBOARD_URL_PATH] = storage_dashboard
+
+        if not frontend.async_panel_exists(hass, DASHBOARD_URL_PATH):
+            frontend.async_register_built_in_panel(
+                hass,
+                LOVELACE_DOMAIN,
+                frontend_url_path=DASHBOARD_URL_PATH,
+                require_admin=item[CONF_REQUIRE_ADMIN],
+                show_in_sidebar=item[CONF_SHOW_IN_SIDEBAR],
+                sidebar_title=item[CONF_TITLE],
+                sidebar_icon=item.get(CONF_ICON, DASHBOARD_ICON),
+                config={"mode": MODE_STORAGE},
+            )
+
+    remove_listener = dashboards_collection.async_add_listener(dashboard_changed)
     try:
-        dashboards_store = Store(hass, 1, DASHBOARDS_STORAGE_KEY)
-        dashboards_data = await dashboards_store.async_load() or {"items": []}
-        items = dashboards_data.setdefault("items", [])
-
-        for item in items:
-            if (
-                item.get("url_path") == DASHBOARD_URL_PATH
-                or item.get("id") == DASHBOARD_ID
-                or item.get("title") == DASHBOARD_TITLE
-            ):
-                _LOGGER.debug("HomeSeer Bridge dashboard already exists; not modifying it")
-                return False
-
-        items.append(
+        item = await dashboards_collection.async_create_item(
             {
-                "id": DASHBOARD_ID,
-                "url_path": DASHBOARD_URL_PATH,
-                "title": DASHBOARD_TITLE,
-                "icon": DASHBOARD_ICON,
-                "show_in_sidebar": True,
-                "require_admin": False,
-                "mode": "storage",
+                CONF_ICON: DASHBOARD_ICON,
+                CONF_TITLE: DASHBOARD_TITLE,
+                CONF_URL_PATH: DASHBOARD_URL_PATH,
+                CONF_SHOW_IN_SIDEBAR: True,
+                CONF_REQUIRE_ADMIN: False,
             }
         )
-
-        dashboard_config_store = Store(hass, 1, DASHBOARD_CONFIG_STORAGE_KEY)
-        existing_config = await dashboard_config_store.async_load()
-        if existing_config is None:
-            await dashboard_config_store.async_save(_dashboard_config())
-
-        await dashboards_store.async_save(dashboards_data)
-        _LOGGER.info("Created HomeSeer Bridge Lovelace dashboard at /%s", DASHBOARD_URL_PATH)
-        return True
-
-    except Exception:
-        _LOGGER.exception("Could not create HomeSeer Bridge dashboard")
+    except HomeAssistantError:
+        _LOGGER.exception("Could not create HomeSeer Bridge dashboard entry")
         return False
+    finally:
+        remove_listener()
+
+    storage_dashboard = lovelace_data.dashboards.get(DASHBOARD_URL_PATH)
+    if storage_dashboard is None:
+        storage_dashboard = dashboard.LovelaceStorage(hass, item)
+        lovelace_data.dashboards[DASHBOARD_URL_PATH] = storage_dashboard
+
+    await storage_dashboard.async_save(_dashboard_config())
+    _LOGGER.info("Created HomeSeer Bridge Lovelace dashboard at /%s", DASHBOARD_URL_PATH)
+    return True

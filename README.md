@@ -1,125 +1,40 @@
 # HomeSeer Bridge
 
-## v4.3.4 — Valve Classification and Reversed On/Off Mapping Fix
+HomeSeer Bridge is a Home Assistant custom integration for **HomeSeer HS4**. It combines the HomeSeer JSON API with optional **mcsMQTT** push updates to expose HomeSeer devices as native Home Assistant entities.
 
-- Restores water valves, valves, pumps, sirens, appliances, and similar controllable HomeSeer features as switch entities.
-- Uses HomeSeer CAPI `ControlUse` metadata to determine the real On and Off command values.
-- Supports devices with reversed mappings such as `0 = On` and `255 = Off`.
-- Switch state now follows HomeSeer status/control metadata instead of assuming every positive value means On.
-- Includes regression coverage for the Kitchen Water Valve pattern shown by HomeSeer ref 1055.
-
-
-## v4.3.3 — Source-Level Exclusions and Registry Cleanup
-
-- Excluded HomeSeer features are dropped immediately after API retrieval and never enter active bridge state.
-- Excluded features no longer receive MQTT state processing, analytics, repairs, or activity tracking.
-- Existing excluded Home Assistant devices are automatically removed from the device registry on integration reload.
-- Manual device deletion is now supported and creates a durable `ref:<HomeSeerRef>` exclusion so the device does not return.
-- New-install defaults also exclude UltraWeatherWU3/Narrative noise in addition to August, YoLink, and Shelly.
-
-
-## v4.3.2 — Battery Platform Classification Fix
-
-- Fixes Z-Wave lock battery child features appearing as Home Assistant lock entities.
-- Makes every entity platform use the same centralized capability classifier.
-- A feature such as `Front Door Lock - Battery` now becomes a native Battery sensor even though its parent is a lock.
-- Real `Door Lock` child features remain native lock entities.
-
-
-## v4.3.1 — Lock Stability and Battery MQTT Fix
-
-- Maps HomeSeer `Unsecured` and `Secured` terminology to native unlocked/locked states.
-- Supports HomeSeer unsecured variants `0`, `1`, `16`, `17`, `32`, and `33`, plus secured value `255`.
-- Prevents transient HomeSeer value `254` from changing a lock to Unknown when a reliable previous state exists.
-- Keeps battery and measurement MQTT payloads numeric instead of translating them to On/Off.
-- Adds lock transition/jammed properties and additional diagnostics.
-
-
-## v4.3.0 — Native Sensor Classification
-
-- Battery features now become native Home Assistant battery sensors with `%`.
-- Adds native temperature, humidity, illuminance, power, energy, voltage, current, frequency, pressure, CO₂, RSSI, duration, distance, speed, and precipitation classes.
-- Adds measurement and total-increasing state classes where appropriate.
-- Prioritizes each feature's own identity so child sensors do not inherit the parent door, motion, lock, light, or switch type.
-
-
-## v4.2.1 — MQTT Binary State Fix
-
-- Fixes 0/255 door, motion, contact, and other binary sensors not updating from MQTT.
-- Prevents stale HomeSeer API status text from overriding a newer MQTT numeric payload.
-- Learns numeric-to-semantic mappings from HomeSeer API value/status pairs.
-- Adds binary-state mapping diagnostics and regression tests.
-
-
-## v4.2.0 — mcsMQTT Bulk Publishing Setup
-
-- Adds a safe companion utility to bulk-enable mcsMQTT outbound publishing.
-- Generates topics from HomeSeer floor, room, and feature names.
-- Enables Value Change, Value Set, and String Change triggers.
-- Supports a dry run, selected refs, exclusions, and automatic timestamped database backups.
-- Includes a ready-to-edit example for Ref 1359.
-
-
-## v4.1.0 — Binary Device Class Intelligence
-
-- Door sensors now display Open/Closed instead of Detected/Clear.
-- Window sensors use the native window device class.
-- Generic contact sensors use the opening device class.
-- Adds metadata-based moisture, smoke, carbon monoxide, gas, tamper, vibration, occupancy, presence, and motion classes.
-
-
-## v4.0.0 — Metadata-Driven Capabilities
-
-- Adds a HomeSeer CAPI Status/Graphics and Controls capability engine.
-- Resolves values such as `22`, `23`, `5632`, and `5633` through HomeSeer status metadata.
-- Correctly maps Door/Window values to Open/Closed even when both values are non-zero.
-- Detects locks using HomeSeer `DoorLock` and `DoorUnlock` control uses.
-- Uses metadata-provided lock command values instead of assuming `0/255`.
-- Preserves resolved status source, semantic state, status-pair count, and control-pair count as diagnostics attributes.
-- MQTT numeric updates now retain HomeSeer's semantic status instead of replacing it with generic On/Off.
-
-
-## v3.8.1
-
-- Correctly recognizes HomeSeer/Z-Wave `Door/Window` and contact devices as Home Assistant binary sensors.
-- Uses HomeSeer status text before raw numeric values.
-- Displays contact devices as Open/Closed instead of values such as 0, 1, 22, or 23.
-- Preserves the raw HomeSeer value and status as entity attributes.
-
-
-A Home Assistant custom integration for **HomeSeer HS4** using the HomeSeer JSON API and **mcsMQTT**.
-
-Designed for large HomeSeer installations with local updates, dashboards, diagnostics, cached analytics, and recorder-safe attributes.
+It is designed for large HomeSeer installations and focuses on local control, fast state updates, diagnostics, device classification, area suggestions, and recorder-safe monitoring.
 
 ## Features
 
-- Local HomeSeer JSON API discovery and control
-- Fast state updates through mcsMQTT
-- Lights, switches, sensors, binary sensors, locks, covers, and fans
-- Virtual device polling
-- Bridge health monitoring
-- API latency, MQTT activity, virtual polling, reconnect, and discovery metrics
-- Recent Activity and Live Event Viewer dashboard snippets
+- HomeSeer JSON API discovery and control
+- Fast local state updates through mcsMQTT
+- Native lights, switches, sensors, binary sensors, locks, covers, and fans
+- Metadata-driven Home Assistant device classes and units
+- HomeSeer CAPI-aware control values and semantic states
+- Configurable source-level exclusions
+- Bridge health, latency, reconnect, MQTT, and discovery diagnostics
 - Smart Device Model classification
-- Auto Area Prep and manual Auto Area Apply
-- Device Explorer Prep
-- Cached Repairs Prep
-- Recorder-safe compact attributes for large installs
+- Auto Area Prep and opt-in Auto Area Apply
+- Optional HomeSeer Bridge dashboard, created only when requested
 - HACS-ready repository structure
+
+## Requirements
+
+- Home Assistant
+- HomeSeer HS4 reachable from Home Assistant
+- MQTT configured in Home Assistant if mcsMQTT push updates are used
+- mcsMQTT configured to publish the HomeSeer features you want updated in real time
 
 ## Installation
 
 ### HACS custom repository
 
-1. Open Home Assistant.
-2. Go to **HACS**.
-3. Open the three-dot menu.
-4. Select **Custom repositories**.
-5. Add this repository URL.
-6. Category: **Integration**.
-7. Install **HomeSeer Bridge**.
-8. Restart Home Assistant.
-9. Go to **Settings → Devices & services → Add integration → HomeSeer Bridge**.
+1. Open **HACS** in Home Assistant.
+2. Open the three-dot menu and choose **Custom repositories**.
+3. Add this repository as an **Integration**.
+4. Install **HomeSeer Bridge**.
+5. Restart Home Assistant.
+6. Go to **Settings → Devices & services → Add integration → HomeSeer Bridge**.
 
 ### Manual installation
 
@@ -135,28 +50,44 @@ to:
 /config/custom_components/homeseer_bridge
 ```
 
-Restart Home Assistant and add the integration from **Settings → Devices & services**.
+Restart Home Assistant and add **HomeSeer Bridge** from **Settings → Devices & services**.
 
 ## Configuration
 
-Typical settings:
+The setup form intentionally does not ship with installation-specific addresses, MQTT node names, or exclusion filters.
+
+Example values:
 
 ```text
-HomeSeer URL: http://192.168.0.193
-MQTT Prefix: Homeseer/Chip23/mcsMQTT
-Excluded terms: august,yolink,shelly
-Recent activity excluded terms: utility,jon00
+HomeSeer URL: http://<homeseer-host>:<port>
+MQTT Prefix: Homeseer/<your-mcsmqtt-node>/mcsMQTT
+Excluded terms: optional comma-separated terms
+Recent activity excluded terms: optional comma-separated terms
 ```
 
-## Dashboards
+The default virtual-device fallback poll interval is **30 seconds**. mcsMQTT remains the preferred path for fast live updates.
 
-Dashboard snippets are included in the `dashboards/` folder.
+## Optional dashboard
 
-Recommended combined file:
+The integration does **not** create or modify Lovelace dashboards during setup.
+
+To create the optional HomeSeer Bridge dashboard, run the action:
 
 ```text
-dashboards/homeseer_bridge_optional_sections_all.yaml
+homeseer_bridge.create_dashboard
 ```
+
+The dashboard is created through Home Assistant's Lovelace dashboard collection/config APIs and is only created after the user explicitly requests it.
+
+Dashboard YAML examples are also available in the `dashboards/` folder.
+
+## Services / actions
+
+- `homeseer_bridge.refresh_all` — refresh HomeSeer state
+- `homeseer_bridge.control_device` — send a raw HomeSeer control value
+- `homeseer_bridge.reload_devices` — rebuild the HomeSeer device cache
+- `homeseer_bridge.create_dashboard` — opt-in dashboard creation
+- `homeseer_bridge.apply_suggested_areas` — preview/apply area suggestions; dry-run is the default
 
 ## Diagnostics
 
@@ -166,7 +97,11 @@ Download diagnostics from:
 Settings → Devices & services → HomeSeer Bridge → Download diagnostics
 ```
 
-Full detail reports are kept in diagnostics instead of large sensor attributes.
+Full reports are kept in diagnostics instead of large entity attributes.
+
+## Releases
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## HACS publishing
 

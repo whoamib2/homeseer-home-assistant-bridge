@@ -335,8 +335,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     update_cached_analytics(hass.data[DOMAIN][entry.entry_id], force=True)
     hass.data[DOMAIN][entry.entry_id]["stats"]["last_api_refresh_timestamp"] = hass.data[DOMAIN][entry.entry_id]["stats"].get("last_api_refresh_timestamp")
 
-    hass.async_create_task(async_ensure_dashboard(hass))
-
     wildcard_topic = f"{mqtt_prefix(entry)}/#"
     debug_logging = entry.options.get(
         CONF_ENABLE_DEBUG_LOGGING,
@@ -566,7 +564,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v4.3.3 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v4.3.5 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

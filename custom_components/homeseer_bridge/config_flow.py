@@ -39,8 +39,8 @@ class HomeSeerBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="HomeSeer Bridge", data=user_input)
 
         schema = vol.Schema({
-            vol.Required(CONF_HS_URL, default=DEFAULT_HS_URL): str,
-            vol.Required(CONF_MQTT_PREFIX, default=DEFAULT_MQTT_PREFIX): str,
+            vol.Required(CONF_HS_URL, default=DEFAULT_HS_URL): vol.All(str, vol.Length(min=1)),
+            vol.Required(CONF_MQTT_PREFIX, default=DEFAULT_MQTT_PREFIX): vol.All(str, vol.Length(min=1)),
             vol.Optional(CONF_EXCLUDED_TERMS, default=DEFAULT_EXCLUDED_TERMS): str,
             vol.Optional(CONF_ACTIVITY_EXCLUDED_TERMS, default=DEFAULT_ACTIVITY_EXCLUDED_TERMS): str,
             vol.Optional(CONF_ENABLE_DEBUG_LOGGING, default=DEFAULT_ENABLE_DEBUG_LOGGING): bool,
@@ -66,7 +66,7 @@ class HomeSeerBridgeOptionsFlow(config_entries.OptionsFlow):
             vol.Optional(
                 CONF_MQTT_PREFIX,
                 default=options.get(CONF_MQTT_PREFIX, data.get(CONF_MQTT_PREFIX, DEFAULT_MQTT_PREFIX)),
-            ): str,
+            ): vol.All(str, vol.Length(min=1)),
             vol.Optional(
                 CONF_EXCLUDED_TERMS,
                 default=options.get(CONF_EXCLUDED_TERMS, data.get(CONF_EXCLUDED_TERMS, DEFAULT_EXCLUDED_TERMS)),

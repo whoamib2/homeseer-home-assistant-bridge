@@ -31,7 +31,7 @@ reload_devices:
 
 create_dashboard:
   name: Create HomeSeer Bridge dashboard
-  description: Create the HomeSeer Bridge Lovelace dashboard if it does not already exist.
+  description: User-requested action that creates the optional HomeSeer Bridge Lovelace dashboard if it does not already exist.
   fields: {}
 
 

@@ -18,7 +18,6 @@ def test_manual_removal_creates_ref_exclusion():
     assert 'token = f"ref:{ref}"' in init
     assert 'term.startswith("ref:")' in helpers
 
-def test_default_exclusions_cover_weather_noise_for_new_installs():
+def test_default_exclusions_are_neutral_for_new_installs():
     const = (COMP / "const.py").read_text()
-    assert "ultraweatherwu3" in const
-    assert "narrative" in const
+    assert 'DEFAULT_EXCLUDED_TERMS = ""' in const

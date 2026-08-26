@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4. Version 4.3.4 restores valve/switch classification and supports HomeSeer devices whose CAPI controls use reversed numeric mappings such as 0=On and 255=Off.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.5 makes dashboard creation opt-in through Lovelace APIs, uses neutral setup defaults, and reduces default fallback polling load.

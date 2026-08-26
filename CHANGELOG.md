@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.3.5
+
+- Removes automatic dashboard creation from integration setup; dashboard creation is now opt-in through `homeseer_bridge.create_dashboard`.
+- Replaces direct Lovelace `Store` writes with Lovelace dashboard collection/config APIs and coordinated frontend registration.
+- Raises the default full-install virtual polling interval from 5 seconds to 30 seconds.
+- Removes installation-specific HomeSeer URL, MQTT prefix, and exclusion-list defaults from new installs.
+- Reorders the README so the project description, features, and installation instructions come before release history.
+
 ## v4.3.4
 
 - Restores valve/water-valve/pump/siren/appliance classification as controllable switches.
