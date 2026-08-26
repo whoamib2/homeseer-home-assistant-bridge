@@ -52,6 +52,23 @@ class HomeSeerApi:
             except Exception:
                 return await resp.text()
 
+    async def async_control_device_by_label(self, ref: int, label: str):
+        """Control a HomeSeer device using its exact CAPI label."""
+        params = urlencode(
+            {
+                "request": "controldevicebylabel",
+                "ref": ref,
+                "label": label,
+            }
+        )
+        url = f"{self.base_url}/JSON?{params}"
+        async with self.session.get(url, timeout=15) as resp:
+            resp.raise_for_status()
+            try:
+                return await resp.json(content_type=None)
+            except Exception:
+                return await resp.text()
+
     async def async_get_device_status(self, ref: int) -> dict | None:
         """Fetch and normalize one HomeSeer ref for post-control verification."""
         params = urlencode(

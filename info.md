@@ -1,1 +1,1 @@
-Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.7 uses HomeSeer's ControlUse API for cover commands and verifies the real HomeSeer state after each command.
+Home Assistant custom integration for HomeSeer HS4 using the HomeSeer JSON API and optional mcsMQTT push updates. Version 4.3.8 prefers HomeSeer's exact CAPI label control for covers and verifies the resulting HomeSeer state.

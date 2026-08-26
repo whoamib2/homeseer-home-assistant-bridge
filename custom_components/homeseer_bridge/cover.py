@@ -66,6 +66,41 @@ def cover_close_value(device: dict):
     return 0 if value is None else value
 
 
+def _cover_label_for_use(device: dict, *, expected_open: bool) -> str:
+    """Return the exact HomeSeer CAPI label for Open or Closed."""
+    wanted_use = "on" if expected_open else "off"
+    fallback_words = ("open", "opened") if expected_open else ("closed", "close")
+
+    # Prefer a control pair whose ControlUse is On/Off.
+    for pair in device.get("controls") or []:
+        if not isinstance(pair, dict):
+            continue
+        use = " ".join(
+            str(pair.get(key) or "")
+            for key in ("ControlUse", "control_use", "Use", "use")
+        ).strip().lower()
+        if wanted_use not in use:
+            continue
+        for key in ("Label", "label", "Status", "status", "Text", "text"):
+            value = pair.get(key)
+            if value is not None and str(value).strip():
+                return str(value).strip()
+
+    # Fall back to a matching label if ControlUse metadata is missing.
+    for pair in device.get("controls") or []:
+        if not isinstance(pair, dict):
+            continue
+        for key in ("Label", "label", "Status", "status", "Text", "text"):
+            value = pair.get(key)
+            if value is None or not str(value).strip():
+                continue
+            label = str(value).strip()
+            if any(word == label.lower() for word in fallback_words):
+                return label
+
+    return "Open" if expected_open else "Closed"
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     state = data["state"]
@@ -136,14 +171,31 @@ class HomeSeerCover(HomeSeerEntityBase, CoverEntity):
         """Control HomeSeer, then publish only the state HomeSeer reports."""
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
 
-        # HomeSeer JSON API ePairControlUse: On=1, Off=2.
-        # Virtual garage-state devices often use these control pairs even when
-        # their numeric values are non-standard (for ref 1094: Open=100).
-        use_name = "on" if expected_open else "off"
-        if control_value_for_use(self.device, use_name) is not None:
-            await api.async_control_device_by_control_use(self.ref, control_use)
-        else:
-            await api.async_control_device_by_value(self.ref, fallback_value)
+        # Refresh one ref with everything=true so we have the authoritative
+        # HomeSeer control labels before sending the command.
+        current = await api.async_get_device_status(self.ref)
+        if current is not None:
+            self.device.clear()
+            self.device.update(current)
+
+        label = _cover_label_for_use(
+            self.device,
+            expected_open=expected_open,
+        )
+
+        # HomeSeer's label endpoint directly selects the exact CAPI control row.
+        # This is especially reliable for standalone virtual devices such as
+        # ref 1094, where "Open" maps to value 100 and "Closed" maps to 0.
+        try:
+            await api.async_control_device_by_label(self.ref, label)
+        except Exception:
+            # Compatibility fallback for integrations/devices that do not
+            # support label control as expected.
+            use_name = "on" if expected_open else "off"
+            if control_value_for_use(self.device, use_name) is not None:
+                await api.async_control_device_by_control_use(self.ref, control_use)
+            else:
+                await api.async_control_device_by_value(self.ref, fallback_value)
 
         actual = await api.async_get_device_status(self.ref)
         if actual is None:

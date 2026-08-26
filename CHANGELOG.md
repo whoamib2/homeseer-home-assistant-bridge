@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.3.8
+
+- Uses HomeSeer's `controldevicebylabel` JSON API as the preferred cover-control path.
+- Refreshes the exact HomeSeer ref with `everything=true` before control so the bridge can use the authoritative CAPI labels.
+- Selects the exact Open/Closed CAPI row rather than relying on value or ControlUse translation.
+- Keeps ControlUse and raw value control as compatibility fallbacks.
+- Verified against HomeSeer ref 1094, where `label=Open` correctly changes the device to value 100 / state Open.
+
 ## v4.3.7
 
 - Uses HomeSeer's `controldevicebycontroluse` endpoint for covers that expose CAPI On/Off control pairs.

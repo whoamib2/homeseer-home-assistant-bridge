@@ -14,5 +14,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/whoamib2/homeseer-home-assistant-bridge/issues",
   "requirements": [],
-  "version": "4.3.7"
+  "version": "4.3.8"
 }
