@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_PREFIX = "Homeseer/Chip23/mcsMQTT"
+DEFAULT_PREFIX = "Homeseer/mcsMQTT"
 DEFAULT_CHANGE_TYPE = 7  # 1=value change, 2=value set, 4=string change
 
 
@@ -142,7 +142,7 @@ def update_or_insert(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", required=True, help="Path to mcsMQTT.db")
-    parser.add_argument("--homeseer-url", required=True, help="Example: http://192.168.0.193")
+    parser.add_argument("--homeseer-url", required=True, help="Example: http://homeseer.local")
     parser.add_argument("--broker-ip", required=True, help="MQTT broker IP used by mcsMQTT")
     parser.add_argument("--prefix", default=DEFAULT_PREFIX)
     parser.add_argument("--exclude", default="", help="Comma-separated terms to exclude")

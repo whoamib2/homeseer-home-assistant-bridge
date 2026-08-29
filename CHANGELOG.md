@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.3.9
+
+- Removes the bundled installation-specific HomeSeer ref/MQTT topic table.
+- Makes name-only MQTT fallback aliases collision-safe by enabling them only for unique names.
+- Raises the declared minimum Home Assistant version to 2026.8.0.
+- Moves Lovelace from a hard dependency to `after_dependencies`.
+- Registers all HomeSeer Bridge custom services as admin-only.
+- Redacts credentials embedded in `homeseer_url` from downloadable diagnostics.
+- Guards light and fan control against non-numeric HomeSeer CAPI control values.
+- Makes the optional generated dashboard admin-only.
+- Neutralizes installation-specific values in bundled docs and mcsMQTT utility examples.
+- Makes all generated MQTT candidate topics collision-safe, not just name-only aliases.
+
 ## v4.3.8
 
 - Uses HomeSeer's `controldevicebylabel` JSON API as the preferred cover-control path.

@@ -66,7 +66,11 @@ class HomeSeerFan(HomeSeerEntityBase, FanEntity):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
         value = on_value(self.device)
         await api.async_control_device_by_value(self.ref, value)
-        self.device["numeric_value"] = float(value)
+        try:
+            self.device["numeric_value"] = float(value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = value
         self.device["status"] = "On"
         self.async_write_ha_state()
 
@@ -74,6 +78,10 @@ class HomeSeerFan(HomeSeerEntityBase, FanEntity):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
         value = off_value(self.device)
         await api.async_control_device_by_value(self.ref, value)
-        self.device["numeric_value"] = float(value)
+        try:
+            self.device["numeric_value"] = float(value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = value
         self.device["status"] = "Off"
         self.async_write_ha_state()

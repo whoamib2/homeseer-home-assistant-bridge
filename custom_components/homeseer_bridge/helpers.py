@@ -64,30 +64,40 @@ def topic_candidates(device: dict, entry) -> set[str]:
     return candidates
 
 def build_topic_lookup(devices: dict[int, dict], entry) -> dict[str, int]:
-    """Build O(1) MQTT topic -> HomeSeer ref lookup.
+    """Build an MQTT topic lookup without ambiguous aliases.
 
-    v1.1 uses the exact mcsMQTT database mapping first, then falls back to
-    generated topic candidates. This avoids 10-15 second delayed updates caused
-    by topic guesses not matching real mcsMQTT topics.
+    Exact private mappings, when supplied by a local build, remain exact. All
+    generated candidates are installed only when that normalized candidate maps
+    to exactly one active HomeSeer ref.
     """
-    lookup = {}
+    lookup: dict[str, int] = {}
 
-    # Exact topic mapping generated from mcsMQTT.db
     for ref, topics in REF_TO_TOPICS.items():
         if ref not in devices:
             continue
         for topic in topics:
             lookup[normalize_topic(topic)] = ref
-            last = normalize_topic(topic).split("/")[-1]
-            lookup.setdefault(f"__name__/{last}", ref)
 
-    # Fallback generated candidates
+    candidate_refs: dict[str, set[int]] = {}
+    name_refs: dict[str, set[int]] = {}
+
     for ref, device in devices.items():
         for candidate in topic_candidates(device, entry):
-            lookup.setdefault(normalize_topic(candidate), ref)
+            normalized = normalize_topic(candidate)
+            if normalized:
+                candidate_refs.setdefault(normalized, set()).add(ref)
 
-        name_key = f"__name__/{normalize_topic(_topic_part(device.get('name')))}"
-        lookup.setdefault(name_key, ref)
+        normalized_name = normalize_topic(_topic_part(device.get("name")))
+        if normalized_name:
+            name_refs.setdefault(normalized_name, set()).add(ref)
+
+    for normalized, refs in candidate_refs.items():
+        if len(refs) == 1:
+            lookup.setdefault(normalized, next(iter(refs)))
+
+    for normalized_name, refs in name_refs.items():
+        if len(refs) == 1:
+            lookup[f"__name__/{normalized_name}"] = next(iter(refs))
 
     return lookup
 

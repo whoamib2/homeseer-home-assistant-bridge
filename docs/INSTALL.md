@@ -31,9 +31,9 @@ Restart Home Assistant, then add the integration.
 ## Typical configuration
 
 ```text
-HomeSeer URL: http://192.168.0.193
-MQTT Prefix: Homeseer/Chip23/mcsMQTT
-Excluded terms: august,yolink,shelly
+HomeSeer URL: http://<homeseer-host>:<port>
+MQTT Prefix: Homeseer/<your-mcsmqtt-node>/mcsMQTT
+Excluded terms: optional comma-separated terms
 ```
 
 ## Notes

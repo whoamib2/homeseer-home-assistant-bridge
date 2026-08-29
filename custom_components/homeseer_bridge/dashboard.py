@@ -135,7 +135,7 @@ async def async_ensure_dashboard(hass: HomeAssistant) -> bool:
                 CONF_TITLE: DASHBOARD_TITLE,
                 CONF_URL_PATH: DASHBOARD_URL_PATH,
                 CONF_SHOW_IN_SIDEBAR: True,
-                CONF_REQUIRE_ADMIN: False,
+                CONF_REQUIRE_ADMIN: True,
             }
         )
     except HomeAssistantError:

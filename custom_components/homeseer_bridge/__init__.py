@@ -13,6 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import async_register_admin_service
 
 from .api import HomeSeerApi
 from .const import (
@@ -541,18 +542,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_REFRESH_ALL):
-        hass.services.async_register(DOMAIN, SERVICE_REFRESH_ALL, handle_refresh_all)
+        async_register_admin_service(
+            hass, DOMAIN, SERVICE_REFRESH_ALL, handle_refresh_all
+        )
     if not hass.services.has_service(DOMAIN, SERVICE_CONTROL_DEVICE):
-        hass.services.async_register(
-            DOMAIN, SERVICE_CONTROL_DEVICE, handle_control_device,
-            schema=vol.Schema({vol.Required("ref"): vol.Coerce(int), vol.Required("value"): object}),
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            SERVICE_CONTROL_DEVICE,
+            handle_control_device,
+            schema=vol.Schema({
+                vol.Required("ref"): vol.Coerce(int),
+                vol.Required("value"): object,
+            }),
         )
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD_DEVICES):
-        hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices)
+        async_register_admin_service(
+            hass, DOMAIN, SERVICE_RELOAD_DEVICES, handle_reload_devices
+        )
     if not hass.services.has_service(DOMAIN, SERVICE_CREATE_DASHBOARD):
-        hass.services.async_register(DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard)
+        async_register_admin_service(
+            hass, DOMAIN, SERVICE_CREATE_DASHBOARD, handle_create_dashboard
+        )
     if not hass.services.has_service(DOMAIN, SERVICE_APPLY_SUGGESTED_AREAS):
-        hass.services.async_register(
+        async_register_admin_service(
+            hass,
             DOMAIN,
             SERVICE_APPLY_SUGGESTED_AREAS,
             handle_apply_suggested_areas,
@@ -564,7 +578,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     _LOGGER.info(
-        "HomeSeer Bridge v4.3.8 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
+        "HomeSeer Bridge v4.3.9 subscribed to %s with %s devices, %s topic lookup keys, virtual=%s, refresh=%ss virtual_poll=%ss reconnect=%ss",
         wildcard_topic, len(state), len(topic_lookup), len(virtual_refs), refresh_interval, virtual_poll_interval, reconnect_interval
     )
 

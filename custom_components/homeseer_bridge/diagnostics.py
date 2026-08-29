@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from urllib.parse import urlsplit, urlunsplit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,15 +15,42 @@ from .bridge_stats import ensure_stats, refresh_derived_stats, health_score, bri
 REDACT_KEYS = {"password", "token", "api_key", "secret", "username"}
 
 
+def _redact_url_credentials(value):
+    """Strip credentials from URLs while retaining useful host information."""
+    if not isinstance(value, str):
+        return value
+
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return "**REDACTED**"
+
+    if parsed.username is None and parsed.password is None:
+        return value
+
+    host = parsed.hostname or ""
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+    netloc = host
+    if parsed.port is not None:
+        netloc = f"{netloc}:{parsed.port}"
+
+    return urlunsplit(
+        (parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment)
+    )
+
+
 def _redact_dict(data: dict) -> dict:
     out = {}
     for key, value in data.items():
-        if any(s in str(key).lower() for s in REDACT_KEYS):
+        key_lower = str(key).lower()
+        if any(s in key_lower for s in REDACT_KEYS):
             out[key] = "**REDACTED**"
+        elif key_lower == "homeseer_url":
+            out[key] = _redact_url_credentials(value)
         else:
             out[key] = value
     return out
-
 
 def _count_by(state: dict, key: str) -> dict:
     counts = {}

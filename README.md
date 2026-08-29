@@ -8,6 +8,7 @@ It is designed for large HomeSeer installations and focuses on local control, fa
 
 - HomeSeer JSON API discovery and control
 - Fast local state updates through mcsMQTT
+- MQTT lookup generated per installation; no private ref/topic map ships with the integration
 - Native lights, switches, sensors, binary sensors, locks, covers, and fans
 - Metadata-driven Home Assistant device classes and units
 - HomeSeer CAPI-aware control values and semantic states
@@ -21,7 +22,7 @@ It is designed for large HomeSeer installations and focuses on local control, fa
 
 ## Requirements
 
-- Home Assistant
+- Home Assistant **2026.8.0 or newer**
 - HomeSeer HS4 reachable from Home Assistant
 - MQTT configured in Home Assistant if mcsMQTT push updates are used
 - mcsMQTT configured to publish the HomeSeer features you want updated in real time

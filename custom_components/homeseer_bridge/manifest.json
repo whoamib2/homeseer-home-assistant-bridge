@@ -1,12 +1,14 @@
 {
   "domain": "homeseer_bridge",
   "name": "HomeSeer Bridge",
+  "after_dependencies": [
+    "lovelace"
+  ],
   "codeowners": [
     "@whoamib2"
   ],
   "config_flow": true,
   "dependencies": [
-    "lovelace",
     "mqtt"
   ],
   "documentation": "https://github.com/whoamib2/homeseer-home-assistant-bridge",
@@ -14,5 +16,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/whoamib2/homeseer-home-assistant-bridge/issues",
   "requirements": [],
-  "version": "4.3.8"
+  "version": "4.3.9"
 }

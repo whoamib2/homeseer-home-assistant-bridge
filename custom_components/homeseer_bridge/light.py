@@ -75,14 +75,22 @@ class HomeSeerLight(HomeSeerEntityBase, LightEntity):
         brightness = kwargs.get("brightness")
         hs_value = round((brightness / 255) * 100) if brightness is not None else on_value(self.device)
         await api.async_control_device_by_value(self.ref, hs_value)
-        self.device["numeric_value"] = float(hs_value)
-        self.device["status"] = "On" if hs_value > 0 else "Off"
+        try:
+            self.device["numeric_value"] = float(hs_value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = hs_value
+        self.device["status"] = "On"
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         api = self.hass.data[DOMAIN][self.entry.entry_id]["api"]
         value = off_value(self.device)
         await api.async_control_device_by_value(self.ref, value)
-        self.device["numeric_value"] = float(value)
+        try:
+            self.device["numeric_value"] = float(value)
+        except (TypeError, ValueError):
+            self.device["numeric_value"] = None
+        self.device["value"] = value
         self.device["status"] = "Off"
         self.async_write_ha_state()

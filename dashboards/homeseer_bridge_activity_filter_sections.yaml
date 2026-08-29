@@ -20,7 +20,7 @@
         Activity filtering is controlled from Settings → Devices & services →
         HomeSeer Bridge → Configure.
 
-        Add comma-separated terms such as `utility,jon00`.
+        Add comma-separated terms such as `weather,debug`.
 
         Matching activity is hidden from the Live Event Viewer but still leaves a
         filtered count for troubleshooting.
