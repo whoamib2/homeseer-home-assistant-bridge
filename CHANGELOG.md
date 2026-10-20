@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.3.10
+
+- Fixes manual device deletion by importing the exclusion option key used to save durable `ref:<n>` exclusions.
+- Adds behavioral regression tests for first-time removal, option preservation, repeated removal, and bridge/foreign-device rejection.
+
 ## v4.3.9
 
 - Removes the bundled installation-specific HomeSeer ref/MQTT topic table.
