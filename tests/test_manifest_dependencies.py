@@ -11,4 +11,4 @@ def test_mqtt_dependency_and_optional_lovelace_after_dependency():
 
 def test_release_remains_current():
     manifest = json.loads(MANIFEST.read_text())
-    assert manifest["version"] == "4.3.9"
+    assert manifest["version"] == "4.3.10"
